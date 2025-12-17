@@ -61,16 +61,16 @@
   - **Validates: Requirements 3.1, 3.2, 3.3, 3.4**
 
 - [ ] 6. Implement Location Analyzer
-  - Create Google Maps API integration for geospatial analysis
-  - Implement traffic pattern analysis and noise assessment
-  - Add amenity distance calculations (schools, gyms, shopping, transit)
-  - Create environmental factor evaluation
+  - Create Google Maps API integration for proximity analysis
+  - Implement distance calculations for markets, gyms, bus parks, railway terminals, stadiums, malls, airports, and seaports
+  - Add 6km radius filtering for amenity searches
+  - Create structured amenity scores with proximity data
   - Implement graceful handling of missing mapping data
-  - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
+  - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-- [ ]* 6.1 Write property test for location analysis completeness
-  - **Property 5: Location Analysis Completeness**
-  - **Validates: Requirements 4.1, 4.2, 4.3, 4.4, 4.5**
+- [ ]* 6.1 Write property test for amenity proximity analysis
+  - **Property 5: Amenity Proximity Analysis**
+  - **Validates: Requirements 4.1, 4.2, 4.3, 4.4**
 
 - [ ] 7. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
