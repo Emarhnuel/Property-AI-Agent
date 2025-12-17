@@ -62,10 +62,9 @@ The AI Real Estate Agent is an intelligent, event-driven system that automates t
 #### Acceptance Criteria
 
 1. WHEN a property receives user approval, THE Location_Analyzer SHALL perform geospatial analysis using mapping platform data
-2. WHEN analyzing location factors, THE Location_Analyzer SHALL identify traffic congestion patterns, noise pollution sources, and proximity to industrial zones
-3. WHEN evaluating amenities, THE Location_Analyzer SHALL calculate distances to schools, gyms, shopping centers, and transportation hubs
-4. WHEN Location_Analyzer completes analysis, THE AI_Real_Estate_Agent SHALL compile findings into structured location intelligence data
-5. WHEN mapping data is unavailable or incomplete, THE Location_Analyzer SHALL document limitations and proceed with available information
+2. WHEN evaluating amenities, THE Location_Analyzer SHALL calculate distances to markets, gyms, bus parks, railway terminals, stadiums, malls, airports, and seaports within 6km radius
+3. WHEN Location_Analyzer completes analysis, THE AI_Real_Estate_Agent SHALL compile proximity findings into structured amenity scores data
+4. WHEN mapping data is unavailable or incomplete, THE Location_Analyzer SHALL document limitations and proceed with available information
 
 ### Requirement 5
 
