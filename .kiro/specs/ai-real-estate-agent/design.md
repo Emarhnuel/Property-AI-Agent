@@ -107,11 +107,11 @@ stateDiagram-v2
 - `capture_image_urls(listing_url: str) -> List[str]`
 
 #### 3. Location Analyzer
-**Responsibility:** Performs geospatial analysis and location intelligence
+**Responsibility:** Performs proximity analysis for key amenities within 5-8km radius
 **Key Methods:**
 - `analyze_location(address: Address) -> LocationIntelligence`
-- `assess_traffic_patterns(coordinates: Coordinates) -> TrafficAnalysis`
-- `evaluate_amenities(coordinates: Coordinates, radius: int) -> AmenityAnalysis`
+- `evaluate_amenities(coordinates: Coordinates, radius: int) -> AmenityScores`
+- `calculate_proximity(coordinates: Coordinates, amenity_type: str) -> ProximityData`
 
 #### 4. Voice AI Agents
 **Responsibility:** Conducts phone calls with agents and property owners
@@ -149,10 +149,8 @@ class PropertyRecord(BaseModel):
     extracted_at: datetime
 
 class LocationIntelligence(BaseModel):
-    traffic_analysis: TrafficAnalysis
-    noise_assessment: NoiseAssessment
     amenity_scores: AmenityScores
-    environmental_factors: EnvironmentalFactors
+    proximity_analysis: ProximityAnalysis
 
 class CallResult(BaseModel):
     success: bool
@@ -193,18 +191,26 @@ class ImageData(BaseModel):
 ### Location Analysis Models
 
 ```python
-class TrafficAnalysis(BaseModel):
-    peak_hour_congestion: CongestionLevel
-    average_commute_times: Dict[str, int]  # destination -> minutes
-    public_transit_access: TransitAccess
-    parking_availability: ParkingAssessment
+class ProximityAnalysis(BaseModel):
+    analysis_radius_km: float  # 6km radius
+    total_amenities_found: int
+    analysis_timestamp: datetime
 
 class AmenityScores(BaseModel):
-    schools: SchoolRatings
-    shopping: ShoppingAccess
-    healthcare: HealthcareAccess
-    recreation: RecreationFacilities
-    restaurants: DiningOptions
+    markets: List[ProximityData]
+    gyms: List[ProximityData]
+    bus_parks: List[ProximityData]
+    railway_terminals: List[ProximityData]
+    stadiums: List[ProximityData]
+    malls: List[ProximityData]
+    airports: List[ProximityData]
+    seaports: List[ProximityData]
+
+class ProximityData(BaseModel):
+    name: str
+    distance_km: float
+    address: str
+    coordinates: Coordinates
 ```
 
 ### Workflow State Models
@@ -261,9 +267,9 @@ After analyzing all acceptance criteria, several properties can be consolidated 
 *For any* set of extracted properties, the frontend interface should display all properties with complete data including image URLs, accept individual approval decisions, and ensure only approved properties proceed to subsequent phases
 **Validates: Requirements 3.1, 3.2, 3.3, 3.4**
 
-**Property 5: Location Analysis Completeness**
-*For any* approved property, the Location_Analyzer should perform comprehensive geospatial analysis covering traffic patterns, environmental factors, and amenity distances, with structured output and graceful handling of data limitations
-**Validates: Requirements 4.1, 4.2, 4.3, 4.4, 4.5**
+**Property 5: Amenity Proximity Analysis**
+*For any* approved property, the Location_Analyzer should calculate distances to markets, gyms, bus parks, railway terminals, stadiums, malls, airports, and seaports within 6km radius, with structured output and graceful handling of data limitations
+**Validates: Requirements 4.1, 4.2, 4.3, 4.4**
 
 **Property 6: Inspector AI Engagement**
 *For any* property with rental/purchase intent, the Inspector_AI should successfully navigate phone systems, conduct natural conversations for booking inspections, ask all user-defined questions, and record complete call results
