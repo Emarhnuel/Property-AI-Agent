@@ -1,0 +1,45 @@
+# Call Agent Crew Tasks - Hierarchical Process
+
+route_calls:
+  description: >
+    Review the approved properties and their engagement intents from {approved_properties}.
+    Route each property to either the Inspector (for rent/buy intent) or Negotiator 
+    (for acquisition intent). Coordinate the call sequence and ensure all properties 
+    are processed.
+  expected_output: >
+    A routing plan indicating which agent handles each property, with call priorities 
+    and any special instructions based on user questions.
+  agent: manager
+
+conduct_inspection_calls:
+  description: >
+    For properties with rent/buy intent, contact the property agents using the 
+    contact information from {property_contacts}. Navigate any phone menus, 
+    request inspection bookings, and ask the user-defined questions: {user_questions}.
+    Record the full conversation transcript and any booking confirmations.
+  expected_output: >
+    Call results including: success status, full transcript, booking confirmation 
+    details (date, time, agent name), and answers to user questions.
+  agent: inspector
+
+conduct_negotiation_calls:
+  description: >
+    For properties with acquisition intent, contact the property owners using 
+    the contact information from {property_contacts}. Use persuasive conversation 
+    techniques to gauge selling interest. If interest exists, initiate preliminary 
+    negotiation discussions. Handle disinterest gracefully and document all responses.
+  expected_output: >
+    Negotiation results including: owner response (interested/not interested), 
+    preliminary terms discussed, follow-up actions, and full conversation transcript.
+  agent: negotiator
+
+compile_call_report:
+  description: >
+    Compile all call results from Inspector and Negotiator agents into a structured 
+    JSON report. Include all transcripts, booking confirmations, negotiation outcomes, 
+    and any failed call attempts that need retry scheduling.
+  expected_output: >
+    A comprehensive JSON file (call_results.json) containing all call outcomes 
+    organized by property, with clear status indicators and complete data.
+  agent: report_agent
+  output_file: output/call_results.json
