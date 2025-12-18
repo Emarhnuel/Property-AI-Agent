@@ -13,7 +13,7 @@ llm = LLM(
     base_url="https://openrouter.ai/api/v1",
     api_key=OPENROUTER_API_KEY,
     temperature=0.1,
-    stream=True
+    #stream=True
 )
 
 @CrewBase
@@ -42,6 +42,7 @@ class ResearchCrew:
             config=self.agents_config["scraper"],  # type: ignore[index]
             verbose=True,
             llm=llm,
+            max_iter=10,
             # tools=[firecrawl_tool],  # TODO: Add Firecrawl tool
         )
 
@@ -51,6 +52,7 @@ class ResearchCrew:
         return Agent(
             config=self.agents_config["data_extractor"],  # type: ignore[index]
             verbose=True,
+            max_iter=6,
             llm=llm
         )
 
@@ -60,6 +62,7 @@ class ResearchCrew:
         return Agent(
             config=self.agents_config["validator"],  # type: ignore[index]
             verbose=True,
+            max_iter=3,
             llm=llm 
         )
 
@@ -69,6 +72,7 @@ class ResearchCrew:
         return Agent(
             config=self.agents_config["report_agent"],  # type: ignore[index]
             verbose=True,
+            max_iter=5,
             llm=llm 
         )
 
