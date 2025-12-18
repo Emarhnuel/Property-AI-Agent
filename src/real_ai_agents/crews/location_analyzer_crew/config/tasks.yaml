@@ -1,0 +1,81 @@
+# Location Analyzer Crew Tasks - Hierarchical Process
+# Manager assigns properties to analyzers for parallel processing
+
+assign_properties:
+  description: >
+    Review the approved properties from {approved_properties} (max 4).
+    Assign each property to a dedicated Location Analyzer agent for parallel 
+    analysis. Ensure workload is distributed evenly.
+  expected_output: >
+    Assignment plan mapping each approved property to a specific analyzer agent, 
+    with property addresses and coordinates for analysis.
+  agent: manager
+
+analyze_property_1:
+  description: >
+    Analyze the location of assigned property using Google Maps APIs.
+    Calculate distances to all amenities within 6km radius:
+    - Markets (grocery stores, supermarkets)
+    - Gyms (fitness centers)
+    - Bus parks (bus stations, terminals)
+    - Railway terminals (train stations)
+    - Stadiums (sports venues)
+    - Malls (shopping centers)
+    - Airports
+    - Seaports
+    Document any data limitations gracefully.
+  expected_output: >
+    Structured AmenityScores object with ProximityData for each amenity type, 
+    including name, distance_km, address, and coordinates for each found amenity.
+  agent: location_analyzer_1
+  async_execution: true
+
+analyze_property_2:
+  description: >
+    Analyze the location of assigned property using Google Maps APIs.
+    Calculate distances to all amenities within 6km radius:
+    - Markets, Gyms, Bus parks, Railway terminals, Stadiums, Malls, Airports, Seaports
+    Document any data limitations gracefully.
+  expected_output: >
+    Structured AmenityScores object with ProximityData for each amenity type.
+  agent: location_analyzer_2
+  async_execution: true
+
+analyze_property_3:
+  description: >
+    Analyze the location of assigned property using Google Maps APIs.
+    Calculate distances to all amenities within 6km radius:
+    - Markets, Gyms, Bus parks, Railway terminals, Stadiums, Malls, Airports, Seaports
+    Document any data limitations gracefully.
+  expected_output: >
+    Structured AmenityScores object with ProximityData for each amenity type.
+  agent: location_analyzer_3
+  async_execution: true
+
+analyze_property_4:
+  description: >
+    Analyze the location of assigned property using Google Maps APIs.
+    Calculate distances to all amenities within 6km radius:
+    - Markets, Gyms, Bus parks, Railway terminals, Stadiums, Malls, Airports, Seaports
+    Document any data limitations gracefully.
+  expected_output: >
+    Structured AmenityScores object with ProximityData for each amenity type.
+  agent: location_analyzer_4
+  async_execution: true
+
+compile_location_report:
+  description: >
+    Compile all location analysis results from the analyzer agents into a 
+    structured JSON report. Aggregate amenity scores for each property and 
+    include analysis metadata (timestamp, radius, limitations).
+  expected_output: >
+    A comprehensive JSON file (location_intelligence.json) containing 
+    LocationIntelligence data for each approved property, organized for 
+    easy frontend display and decision-making.
+  agent: report_agent
+  context:
+    - analyze_property_1
+    - analyze_property_2
+    - analyze_property_3
+    - analyze_property_4
+  output_file: output/location_intelligence.json
