@@ -1,0 +1,56 @@
+# Research Agent Crew Tasks - Sequential Process
+
+scrape_listings:
+  description: >
+    Search real estate platforms for properties matching the criteria: {search_criteria}.
+    Use Firecrawl to render dynamic content and extract raw listing data including 
+    URLs, HTML content, and any visible property information. Target platforms 
+    based on the location specified in the search criteria.
+  expected_output: >
+    A list of raw listing data objects containing: listing URLs, raw HTML/text content, 
+    platform source, and extraction timestamp for each discovered property.
+  agent: scraper
+
+extract_property_data:
+  description: >
+    Parse the raw listing data and extract structured property information:
+    - Property specifications (bedrooms, bathrooms, square footage, price, year built)
+    - All image URLs for frontend display
+    - Contact information (agent name, phone, email, brokerage)
+    - Listing URL and platform source
+    Handle missing data gracefully by documenting gaps.
+  expected_output: >
+    A list of structured PropertyRecord objects with all available fields populated 
+    and missing fields clearly marked as null with extraction notes.
+  agent: data_extractor
+  context:
+    - scrape_listings
+
+validate_data:
+  description: >
+    Validate all extracted PropertyRecord objects for data quality:
+    - Check required fields are present (address, price, at least one contact method)
+    - Validate phone number formats
+    - Verify image URLs are properly formatted
+    - Flag any suspicious or incomplete records
+    Continue processing even with gaps, but document all limitations.
+  expected_output: >
+    Validated PropertyRecord list with quality scores and validation notes for each 
+    property. Include a summary of data quality issues found.
+  agent: validator
+  context:
+    - extract_property_data
+
+compile_research_report:
+  description: >
+    Compile all validated property records into a structured JSON report ready 
+    for the Human Decision Gate. Organize data for frontend display with clear 
+    sections for images, specs, and contact info.
+  expected_output: >
+    A comprehensive JSON file (research_results.json) containing all property 
+    records organized for frontend presentation, with metadata about the search 
+    and any data quality notes.
+  agent: report_agent
+  context:
+    - validate_data
+  output_file: output/research_results.json
