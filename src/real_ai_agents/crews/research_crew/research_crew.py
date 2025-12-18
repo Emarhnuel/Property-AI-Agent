@@ -11,7 +11,9 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 llm = LLM(
     model="openrouter/deepseek/deepseek-r1",
     base_url="https://openrouter.ai/api/v1",
-    api_key=OPENROUTER_API_KEY
+    api_key=OPENROUTER_API_KEY,
+    temperature=0.1,
+    stream=True
 )
 
 @CrewBase
@@ -49,6 +51,7 @@ class ResearchCrew:
         return Agent(
             config=self.agents_config["data_extractor"],  # type: ignore[index]
             verbose=True,
+            llm=llm
         )
 
     @agent
@@ -57,6 +60,7 @@ class ResearchCrew:
         return Agent(
             config=self.agents_config["validator"],  # type: ignore[index]
             verbose=True,
+            llm=llm 
         )
 
     @agent
@@ -65,6 +69,7 @@ class ResearchCrew:
         return Agent(
             config=self.agents_config["report_agent"],  # type: ignore[index]
             verbose=True,
+            llm=llm 
         )
 
     @task
