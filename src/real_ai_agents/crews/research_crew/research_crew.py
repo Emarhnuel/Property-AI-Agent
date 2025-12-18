@@ -42,7 +42,11 @@ class ResearchCrew:
             config=self.agents_config["scraper"],  # type: ignore[index]
             verbose=True,
             llm=llm,
+            max_rpm=10,
             max_iter=10,
+            cache=True, 
+            respect_context_window=True, 
+            max_retry_limit=3, 
             # tools=[firecrawl_tool],  # TODO: Add Firecrawl tool
         )
 
