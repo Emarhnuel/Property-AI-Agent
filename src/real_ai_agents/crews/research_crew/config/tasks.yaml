@@ -13,15 +13,69 @@ scrape_listings:
 
 extract_property_data:
   description: >
-    Parse the raw listing data and extract structured property information:
-    - Property specifications (bedrooms, bathrooms, square footage, price, year built)
-    - All image URLs for frontend display
-    - Contact information (agent name, phone, email, brokerage)
-    - Listing URL and platform source
-    Handle missing data gracefully by documenting gaps.
+    Parse the raw listing data and extract comprehensive property information.
+    
+    Required data to extract for each property:
+    
+    PROPERTY IMAGES:
+    - All available image URLs (exterior, interior, rooms, amenities)
+    - Image captions/descriptions if available
+    - Primary/featured image identifier
+    
+    PROPERTY DETAILS:
+    - Property title/headline
+    - Property type (apartment, house, duplex, condo, studio, etc.)
+    - Full address (street, city, state/region, postal code, country)
+    - Price (sale price or rent amount with currency)
+    - Price frequency for rentals (monthly, weekly, yearly)
+    - Bedrooms count
+    - Bathrooms count
+    - Square footage/meters
+    - Year built
+    - Lot size (if applicable)
+    - Parking spaces/garage info
+    - Furnished status
+    - Pet policy
+    - Available date
+    - Lease terms (for rentals)
+    
+    PROPERTY FEATURES:
+    - Amenities list (pool, gym, balcony, garden, etc.)
+    - Utilities included
+    - Security features
+    - Appliances included
+    - Special features (waterfront, mountain view, etc.)
+    
+    PROPERTY DESCRIPTION:
+    - Full listing description text
+    - Neighborhood description if available
+    
+    CONTACT INFORMATION:
+    - Agent/owner name
+    - Phone number(s)
+    - Email address
+    - Brokerage/agency name
+    - Agent photo URL if available
+    
+    LISTING METADATA:
+    - Original listing URL
+    - Platform source (Zillow, Realtor, etc.)
+    - Listing ID on platform
+    - Date listed
+    - Days on market
+    - Listing status (active, pending, etc.)
+    
+    Handle missing data gracefully by marking fields as null with extraction notes.
   expected_output: >
-    A list of structured PropertyRecord objects with all available fields populated 
-    and missing fields clearly marked as null with extraction notes.
+    A list of structured PropertyRecord objects containing:
+    - images: array of {url, caption, is_primary}
+    - details: {title, type, address, price, price_frequency, bedrooms, bathrooms, 
+      sqft, year_built, lot_size, parking, furnished, pet_policy, available_date, lease_terms}
+    - features: {amenities[], utilities[], security[], appliances[], special[]}
+    - description: {full_text, neighborhood}
+    - contact: {name, phone, email, brokerage, photo_url}
+    - metadata: {listing_url, platform, listing_id, date_listed, days_on_market, status}
+    - extraction_notes: any gaps or issues encountered
   agent: data_extractor
   context:
     - scrape_listings
