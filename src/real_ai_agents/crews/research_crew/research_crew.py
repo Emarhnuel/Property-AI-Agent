@@ -5,6 +5,13 @@ from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai.project import CrewBase, agent, crew, task
 
 
+
+llm = LLM(
+    model="openrouter/deepseek/deepseek-r1",
+    base_url="https://openrouter.ai/api/v1",
+    api_key=OPENROUTER_API_KEY
+)
+
 @CrewBase
 class ResearchCrew:
     """Research Agent Crew - Sequential process for property discovery.
