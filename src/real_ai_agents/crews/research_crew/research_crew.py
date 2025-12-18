@@ -1,10 +1,12 @@
+import os
 from typing import List
 
-from crewai import Agent, Crew, Process, Task
+from crewai import Agent, Crew, Process, Task, LLM
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai.project import CrewBase, agent, crew, task
 
 
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 llm = LLM(
     model="openrouter/deepseek/deepseek-r1",
@@ -37,6 +39,7 @@ class ResearchCrew:
         return Agent(
             config=self.agents_config["scraper"],  # type: ignore[index]
             verbose=True,
+            llm=llm,
             # tools=[firecrawl_tool],  # TODO: Add Firecrawl tool
         )
 
