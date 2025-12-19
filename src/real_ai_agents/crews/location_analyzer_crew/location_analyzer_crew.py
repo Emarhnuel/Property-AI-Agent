@@ -46,7 +46,7 @@ class LocationAnalyzerCrew:
             config=self.agents_config["manager"],  # type: ignore[index]
             verbose=True,
             llm=llm,
-            max_iter=5,
+            max_iter=8,
             cache=True,
         )
 
@@ -93,6 +93,10 @@ class LocationAnalyzerCrew:
             respect_context_window=True,
             verbose=True,
             llm=llm,
+            max_iter=10,
+            max_rpm=10,
+            cache=True,
+            max_retry_limit=3,
         )
 
     @agent
@@ -105,6 +109,10 @@ class LocationAnalyzerCrew:
             respect_context_window=True,
             verbose=True,
             llm=llm,
+            max_iter=10,
+            max_rpm=10,
+            cache=True,
+            max_retry_limit=3,
         )
 
     @agent
@@ -117,6 +125,10 @@ class LocationAnalyzerCrew:
             respect_context_window=True,
             verbose=True,
             llm=llm,
+            max_iter=10,
+            max_rpm=10,
+            cache=True,
+            max_retry_limit=3,
         )
 
     @agent
@@ -129,6 +141,10 @@ class LocationAnalyzerCrew:
             respect_context_window=True,
             verbose=True,
             llm=llm,
+            max_iter=10,
+            max_rpm=10,
+            cache=True,
+            max_retry_limit=3,
         )
 
     @agent
@@ -138,6 +154,8 @@ class LocationAnalyzerCrew:
             config=self.agents_config["report_agent"],  # type: ignore[index]
             verbose=True,
             llm=llm,
+            max_iter=5,
+            cache=True,
         )
 
     @task
