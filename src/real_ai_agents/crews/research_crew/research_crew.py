@@ -187,6 +187,8 @@ class ResearchCrew:
         """Task to extract structured data from raw listings."""
         return Task(
             config=self.tasks_config["extract_property_data"],  # type: ignore[index]
+            guardrail=validate_property_extraction,
+            guardrail_max_retries=3,
         )
 
     @task
@@ -194,7 +196,10 @@ class ResearchCrew:
         """Task to validate extracted property data."""
         return Task(
             config=self.tasks_config["validate_data"],  # type: ignore[index]
+            guardrail=hallucination_guardrail,
+            guardrail_max_retries=2,
         )
+
 
     @task
     def compile_research_report(self) -> Task:
