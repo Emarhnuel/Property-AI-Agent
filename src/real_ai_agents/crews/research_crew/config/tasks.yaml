@@ -2,13 +2,87 @@
 
 scrape_listings:
   description: >
-    Search real estate platforms for properties matching the criteria: {search_criteria}.
-    Use Firecrawl to render dynamic content and extract raw listing data including 
-    URLs, HTML content, and any visible property information. Target platforms 
-    based on the location specified in the search criteria.
+    Find and scrape property listings matching the criteria: {search_criteria}.
+    
+    PHASE 1 - PLATFORM DISCOVERY:
+    1. Use web search to find "top real estate websites in {location}" or 
+       "best property listing sites in {location}"
+    2. Identify 3-5 most relevant platforms for this specific location:
+       - International: Zillow, Realtor.com, Redfin, Trulia (if applicable)
+       - Regional/local MLS sites specific to the area
+       - Country-specific platforms (e.g., Rightmove for UK, Domain for Australia, 
+         PropertyGuru for Singapore, Lamudi for Philippines, etc.)
+    3. Prioritize platforms that:
+       - Have the most listings for this location
+       - Allow public access without login
+       - Show detailed property information
+    4. Document which platforms you selected and why
+    
+    PHASE 2 - PROPERTY SEARCH:
+    1. For each selected platform, construct search URLs using the criteria:
+       - Location: {search_criteria.location}
+       - Property type: {search_criteria.property_type}
+       - Price range: {search_criteria.budget}
+       - Bedrooms/bathrooms if specified
+    2. Navigate to search results pages
+    3. Collect ALL listing URLs from search results (paginate if needed)
+    
+    PHASE 3 - LISTING SCRAPING:
+    1. Use Firecrawl to render each listing page fully (wait for JavaScript)
+    2. Extract the complete page content including all visible text and HTML
+    3. Capture images, contact info sections, and property details
+    4. Document any pages that failed to load or were blocked
+    
+    IMPORTANT:
+    - Do NOT skip listings even if they seem incomplete
+    - Include the platform source for each listing
+    - Record timestamps for when each page was scraped
+    - If a platform blocks access, note it and move to alternatives
+    - Aim for 10-30 listings depending on availability
   expected_output: >
-    A list of raw listing data objects containing: listing URLs, raw HTML/text content, 
-    platform source, and extraction timestamp for each discovered property.
+    A JSON object containing:
+    
+    1. platforms_discovered: Array of platforms found and used
+    2. listings: Array of raw listing objects
+    
+    Structure:
+    {
+      "platforms_discovered": [
+        {
+          "name": "Zillow",
+          "url": "https://zillow.com",
+          "reason": "Top US real estate platform with extensive Austin listings",
+          "listings_found": 15
+        },
+        {
+          "name": "Austin MLS",
+          "url": "https://austinmls.com",
+          "reason": "Local MLS with exclusive listings",
+          "listings_found": 8
+        }
+      ],
+      "search_criteria_used": {
+        "location": "Austin, TX",
+        "property_type": "apartment",
+        "max_price": 2500,
+        "bedrooms": 2
+      },
+      "listings": [
+        {
+          "listing_url": "https://zillow.com/...",
+          "platform": "Zillow",
+          "raw_content": "Full HTML/text content of the listing page...",
+          "scraped_at": "2024-01-15T10:30:00Z",
+          "scrape_status": "success"
+        }
+      ],
+      "scrape_summary": {
+        "total_attempted": 25,
+        "successful": 23,
+        "failed": 2,
+        "failed_urls": ["https://...", "https://..."]
+      }
+    }
   agent: scraper
 
 extract_property_data:
@@ -82,28 +156,122 @@ extract_property_data:
 
 validate_data:
   description: >
-    Validate all extracted PropertyRecord objects for data quality:
-    - Check required fields are present (address, price, at least one contact method)
-    - Validate phone number formats
-    - Verify image URLs are properly formatted
-    - Flag any suspicious or incomplete records
-    Continue processing even with gaps, but document all limitations.
+    Validate all extracted PropertyRecord objects for data quality and assign 
+    quality scores to each property.
+    
+    VALIDATION CHECKLIST:
+    1. MANDATORY FIELDS (fail if missing):
+       - property_location/address (at minimum city required)
+       - price (any format, but must exist)
+       - At least ONE contact method (phone OR email OR listing URL)
+    
+    2. PHONE NUMBER VALIDATION:
+       - Must be 7+ digits
+       - Can include +, -, (), spaces
+       - Flag but don't reject unusual formats
+    
+    3. URL VALIDATION:
+       - Must start with http:// or https://
+       - Image URLs should end in common extensions (.jpg, .png, .webp) or be CDN URLs
+    
+    4. PRICE REASONABILITY:
+       - Flag prices under $100 (likely missing zeros)
+       - Flag prices over $100M (likely errors)
+       - Note currency if not USD
+    
+    5. QUALITY SCORING (0-100):
+       - 100: All fields present, all validations pass
+       - 80-99: Minor issues (missing optional fields)
+       - 60-79: Some issues (1-2 validation warnings)
+       - 40-59: Significant issues (missing important fields)
+       - 0-39: Critical issues (missing mandatory fields)
+    
+    IMPORTANT: Do NOT remove properties with issues. Flag them and let the human decide.
   expected_output: >
-    Validated PropertyRecord list with quality scores and validation notes for each 
-    property. Include a summary of data quality issues found.
+    A JSON array of validated PropertyRecord objects, each with added fields:
+    - quality_score: Integer 0-100
+    - validation_status: "pass" | "warning" | "fail"
+    - validation_notes: Array of specific issues found
+    - is_actionable: Boolean (true if has enough data to contact agent)
+    
+    Plus a summary object:
+    - total_properties: count
+    - passed: count with score >= 80
+    - warnings: count with score 40-79
+    - failed: count with score < 40
+    - common_issues: array of most frequent problems
   agent: validator
   context:
     - extract_property_data
 
 compile_research_report:
   description: >
-    Compile all validated property records into a structured JSON report ready 
-    for the Human Decision Gate. Organize data for frontend display with clear 
-    sections for images, specs, and contact info.
+    Compile all validated property records into a final JSON report optimized 
+    for the frontend Human Decision Gate interface.
+    
+    REPORT STRUCTURE:
+    1. METADATA section:
+       - search_criteria: Original search parameters
+       - generated_at: ISO timestamp
+       - total_found: Number of properties scraped
+       - total_validated: Number passing validation
+       - quality_summary: Breakdown by quality tier
+    
+    2. PROPERTIES array (sorted by quality_score descending):
+       Each property should have:
+       - id: Unique identifier for frontend reference
+       - display_title: Clean title for UI card
+       - price_display: Formatted price with currency (e.g., "$2,500/month")
+       - location_display: Clean address for UI
+       - primary_image: Single URL for card thumbnail
+       - all_images: Array of all image URLs
+       - specs: {bedrooms, bathrooms, sqft, type}
+       - contact: {name, phone, email, company}
+       - listing_url: Link to original listing
+       - quality_score: From validation
+       - quality_notes: Human-readable issues summary
+    
+    3. ISSUES section:
+       - properties_with_no_contact: List of property IDs
+       - properties_with_no_images: List of property IDs
+       - properties_flagged: List with reasons
+    
+    FORMAT REQUIREMENTS:
+    - All prices formatted with currency symbol
+    - All dates in ISO format
+    - Empty arrays [] instead of null for missing lists
+    - Consistent field names (snake_case)
   expected_output: >
-    A comprehensive JSON file (research_results.json) containing all property 
-    records organized for frontend presentation, with metadata about the search 
-    and any data quality notes.
+    A single JSON object ready for frontend consumption:
+    {
+      "metadata": {
+        "search_criteria": "...",
+        "generated_at": "2024-01-15T10:30:00Z",
+        "total_found": 25,
+        "total_validated": 22,
+        "quality_summary": {"excellent": 10, "good": 8, "fair": 4}
+      },
+      "properties": [
+        {
+          "id": "prop_001",
+          "display_title": "Modern 2BR Apartment in Downtown",
+          "price_display": "$2,500/month",
+          "location_display": "123 Main St, Austin, TX",
+          "primary_image": "https://...",
+          "all_images": ["https://..."],
+          "specs": {"bedrooms": 2, "bathrooms": 1, "sqft": 950, "type": "apartment"},
+          "contact": {"name": "John Agent", "phone": "+1-555-0123", "email": "...", "company": "Realty Co"},
+          "listing_url": "https://zillow.com/...",
+          "quality_score": 95,
+          "quality_notes": "Complete listing"
+        }
+      ],
+      "issues": {
+        "properties_with_no_contact": [],
+        "properties_with_no_images": ["prop_015"],
+        "properties_flagged": []
+      }
+    }
   agent: report_agent
   context:
     - validate_data
