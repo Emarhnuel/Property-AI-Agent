@@ -1,8 +1,19 @@
 from typing import List
+import os
 
-from crewai import Agent, Crew, Process, Task
+from crewai import Agent, Crew, Process, Task, LLM
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai.project import CrewBase, agent, crew, task
+
+
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+
+llm = LLM(
+    model="openrouter/deepseek/deepseek-chat",
+    base_url="https://openrouter.ai/api/v1",
+    api_key=OPENROUTER_API_KEY,
+    temperature=0.1,
+)
 
 
 @CrewBase
@@ -17,7 +28,7 @@ class LocationAnalyzerCrew:
     
     Process: Hierarchical - Manager coordinates parallel property analysis.
     
-    Amenity Types (6km radius):
+    Amenity Types (6km radius, 50km for airports):
     - Markets, Gyms, Bus parks, Railway terminals
     - Stadiums, Malls, Airports, Seaports
     """
@@ -34,17 +45,19 @@ class LocationAnalyzerCrew:
         return Agent(
             config=self.agents_config["manager"],  # type: ignore[index]
             verbose=True,
+            llm=llm,
         )
 
     @agent
     def location_analyzer_1(self) -> Agent:
         """Location analyzer for property 1."""
         return Agent(
-            config=self.agents_config["location_analyzer_1"],  # type: ignore[index]
-            reasoning=True,  # Enable reasoning for multi-factor analysis
+            config=self.agents_config["location_analyzer"],  # type: ignore[index]
+            reasoning=True,
             max_reasoning_attempts=2,
-            respect_context_window=True,  # Summarize large outputs
+            respect_context_window=True,
             verbose=True,
+            llm=llm,
             # tools=[google_maps_tool],  # TODO: Add Google Maps tool
         )
 
@@ -52,33 +65,36 @@ class LocationAnalyzerCrew:
     def location_analyzer_2(self) -> Agent:
         """Location analyzer for property 2."""
         return Agent(
-            config=self.agents_config["location_analyzer_2"],  # type: ignore[index]
+            config=self.agents_config["location_analyzer"],  # type: ignore[index]
             reasoning=True,
             max_reasoning_attempts=2,
             respect_context_window=True,
             verbose=True,
+            llm=llm,
         )
 
     @agent
     def location_analyzer_3(self) -> Agent:
         """Location analyzer for property 3."""
         return Agent(
-            config=self.agents_config["location_analyzer_3"],  # type: ignore[index]
+            config=self.agents_config["location_analyzer"],  # type: ignore[index]
             reasoning=True,
             max_reasoning_attempts=2,
             respect_context_window=True,
             verbose=True,
+            llm=llm,
         )
 
     @agent
     def location_analyzer_4(self) -> Agent:
         """Location analyzer for property 4."""
         return Agent(
-            config=self.agents_config["location_analyzer_4"],  # type: ignore[index]
+            config=self.agents_config["location_analyzer"],  # type: ignore[index]
             reasoning=True,
             max_reasoning_attempts=2,
             respect_context_window=True,
             verbose=True,
+            llm=llm,
         )
 
     @agent
@@ -87,6 +103,7 @@ class LocationAnalyzerCrew:
         return Agent(
             config=self.agents_config["report_agent"],  # type: ignore[index]
             verbose=True,
+            llm=llm,
         )
 
     @task
@@ -100,7 +117,8 @@ class LocationAnalyzerCrew:
     def analyze_property_1(self) -> Task:
         """Async task for analyzer 1."""
         return Task(
-            config=self.tasks_config["analyze_property_1"],  # type: ignore[index]
+            config=self.tasks_config["analyze_property"],  # type: ignore[index]
+            agent=self.location_analyzer_1(),
             async_execution=True,
         )
 
@@ -108,7 +126,8 @@ class LocationAnalyzerCrew:
     def analyze_property_2(self) -> Task:
         """Async task for analyzer 2."""
         return Task(
-            config=self.tasks_config["analyze_property_2"],  # type: ignore[index]
+            config=self.tasks_config["analyze_property"],  # type: ignore[index]
+            agent=self.location_analyzer_2(),
             async_execution=True,
         )
 
@@ -116,7 +135,8 @@ class LocationAnalyzerCrew:
     def analyze_property_3(self) -> Task:
         """Async task for analyzer 3."""
         return Task(
-            config=self.tasks_config["analyze_property_3"],  # type: ignore[index]
+            config=self.tasks_config["analyze_property"],  # type: ignore[index]
+            agent=self.location_analyzer_3(),
             async_execution=True,
         )
 
@@ -124,7 +144,8 @@ class LocationAnalyzerCrew:
     def analyze_property_4(self) -> Task:
         """Async task for analyzer 4."""
         return Task(
-            config=self.tasks_config["analyze_property_4"],  # type: ignore[index]
+            config=self.tasks_config["analyze_property"],  # type: ignore[index]
+            agent=self.location_analyzer_4(),
             async_execution=True,
         )
 
@@ -143,7 +164,7 @@ class LocationAnalyzerCrew:
             agents=self.agents,
             tasks=self.tasks,
             process=Process.hierarchical,
-            manager_llm="gpt-4o",
+            manager_llm=llm,
             memory=True,
             verbose=True,
         )
