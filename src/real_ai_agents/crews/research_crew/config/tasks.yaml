@@ -15,8 +15,8 @@ scrape_listings:
     3. Prioritize platforms that:
        - Have the most listings for this location
        - Allow public access without login
-       - Show detailed property information
-    4. Document which platforms you selected and why
+       - Show detailed property information 
+       
     
     PHASE 2 - PROPERTY SEARCH:
     1. For each selected platform, construct search URLs using the criteria:
