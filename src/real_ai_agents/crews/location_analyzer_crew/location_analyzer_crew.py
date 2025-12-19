@@ -21,7 +21,7 @@ class LocationAnalyzerCrew:
     """Location Analyzer Crew - Hierarchical process for geospatial analysis.
     
     This crew handles the Intelligence Phase:
-    - Manager assigns approved properties (max 4) to analyzer agents
+    - Manager assigns approved properties (max 6) to analyzer agents
     - Each analyzer handles ALL 8 amenity types for one property
     - Analyzers work in parallel using async_execution
     - Report agent compiles results to JSON
@@ -170,6 +170,24 @@ class LocationAnalyzerCrew:
         return Task(
             config=self.tasks_config["analyze_property"],  # type: ignore[index]
             agent=self.location_analyzer_4(),
+            async_execution=True,
+        )
+
+    @task
+    def analyze_property_5(self) -> Task:
+        """Async task for analyzer 5."""
+        return Task(
+            config=self.tasks_config["analyze_property"],  # type: ignore[index]
+            agent=self.location_analyzer_5(),
+            async_execution=True,
+        )
+
+    @task
+    def analyze_property_6(self) -> Task:
+        """Async task for analyzer 6."""
+        return Task(
+            config=self.tasks_config["analyze_property"],  # type: ignore[index]
+            agent=self.location_analyzer_6(),
             async_execution=True,
         )
 
