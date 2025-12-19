@@ -1,16 +1,18 @@
 # Location Analyzer Crew Tasks - Hierarchical Process
 # Manager assigns properties to analyzers for parallel processing
 
+
 assign_properties:
   description: >
     Review the approved properties from {approved_properties} and create an 
     assignment plan for parallel analysis.
     
     ASSIGNMENT RULES:
-    1. Maximum 4 properties can be analyzed (user approval limit)
+    1. Maximum 6 properties can be analyzed (user approval limit)
     2. Each property gets ONE dedicated analyzer (no sharing)
-    3. If fewer than 4 properties approved, only assign that many analyzers
-    4. Extract the full address for each property for geocoding
+    3. If fewer than 6 properties approved, only assign that many analyzers
+    4. Unassigned analyzers should be listed but not given work
+    5. Extract the full address for each property for geocoding
     
     PROPERTY DATA TO EXTRACT:
     For each approved property, pull from the research results:
@@ -247,5 +249,10 @@ compile_location_report:
     }
   agent: report_agent
   context:
-    - analyze_property
+    - analyze_property_1
+    - analyze_property_2
+    - analyze_property_3
+    - analyze_property_4
+    - analyze_property_5
+    - analyze_property_6
   output_file: output/location_intelligence.json
