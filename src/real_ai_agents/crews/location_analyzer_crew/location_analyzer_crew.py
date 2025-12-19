@@ -98,6 +98,30 @@ class LocationAnalyzerCrew:
         )
 
     @agent
+    def location_analyzer_5(self) -> Agent:
+        """Location analyzer for property 5."""
+        return Agent(
+            config=self.agents_config["location_analyzer"],  # type: ignore[index]
+            reasoning=True,
+            max_reasoning_attempts=2,
+            respect_context_window=True,
+            verbose=True,
+            llm=llm,
+        )
+
+    @agent
+    def location_analyzer_6(self) -> Agent:
+        """Location analyzer for property 6."""
+        return Agent(
+            config=self.agents_config["location_analyzer"],  # type: ignore[index]
+            reasoning=True,
+            max_reasoning_attempts=2,
+            respect_context_window=True,
+            verbose=True,
+            llm=llm,
+        )
+
+    @agent
     def report_agent(self) -> Agent:
         """Report agent that compiles location intelligence to JSON."""
         return Agent(
