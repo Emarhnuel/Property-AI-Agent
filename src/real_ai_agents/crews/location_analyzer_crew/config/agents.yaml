@@ -9,6 +9,7 @@ manager:
     Efficiently coordinate location analysis for approved properties (max 6) by 
     assigning each to a dedicated analyzer, monitoring progress, and ensuring 
     all analyses complete within acceptable timeframes.
+  allow_delegation: true
   backstory: >
     With 12 years managing geospatial analysis teams at commercial real estate firms, 
     you've developed a systematic approach to parallel property analysis. You understand 
