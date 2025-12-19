@@ -46,6 +46,8 @@ class LocationAnalyzerCrew:
             config=self.agents_config["manager"],  # type: ignore[index]
             verbose=True,
             llm=llm,
+            max_iter=5,
+            cache=True,
         )
 
     @agent
@@ -58,6 +60,10 @@ class LocationAnalyzerCrew:
             respect_context_window=True,
             verbose=True,
             llm=llm,
+            max_iter=10,
+            max_rpm=10,
+            cache=True,
+            max_retry_limit=3,
             # tools=[google_maps_tool],  # TODO: Add Google Maps tool
         )
 
@@ -71,6 +77,10 @@ class LocationAnalyzerCrew:
             respect_context_window=True,
             verbose=True,
             llm=llm,
+            max_iter=10,
+            max_rpm=10,
+            cache=True,
+            max_retry_limit=3,
         )
 
     @agent
