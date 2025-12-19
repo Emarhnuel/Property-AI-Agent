@@ -34,11 +34,13 @@ scrape_listings:
     4. Document any pages that failed to load or were blocked
     
     IMPORTANT:
-    - Do NOT skip listings even if they seem incomplete
+    - STOP after collecting exactly 10 listings that match the user's criteria
+    - Do NOT continue scraping once you have 10 valid listings
+    - Only count listings that match the search criteria (location, property type, budget)
     - Include the platform source for each listing
     - Record timestamps for when each page was scraped
     - If a platform blocks access, note it and move to alternatives
-    - Aim for 10-30 listings depending on availability
+    - If you cannot find 10 matching listings across all platforms, return what you found
   expected_output: >
     A JSON object containing:
     
