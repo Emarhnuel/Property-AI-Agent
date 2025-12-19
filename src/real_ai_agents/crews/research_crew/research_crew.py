@@ -218,6 +218,7 @@ class ResearchCrew:
             tasks=self.tasks,
             process=Process.sequential,
             memory=True,
+            stream=True,
             planning=True,  # Enable planning for scraping strategy
             verbose=True,
         )
