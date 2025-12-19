@@ -208,5 +208,6 @@ class LocationAnalyzerCrew:
             process=Process.hierarchical,
             manager_llm=llm,
             memory=True,
+            planning=True,
             verbose=True,
         )
