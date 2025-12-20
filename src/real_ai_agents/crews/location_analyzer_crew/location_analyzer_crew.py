@@ -1,12 +1,109 @@
-from typing import List
+from typing import List, Tuple, Any
 import os
+import json
 
 from crewai import Agent, Crew, Process, Task, LLM
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai.project import CrewBase, agent, crew, task
+from crewai.tasks.task_output import TaskOutput
 
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+
+
+# ============== GUARDRAILS ==============
+
+def validate_location_analysis(result: TaskOutput) -> Tuple[bool, Any]:
+    """Validate that location analysis contains all 8 amenity categories and required fields."""
+    try:
+        # Parse the result
+        if isinstance(result.raw, str):
+            try:
+                data = json.loads(result.raw)
+            except json.JSONDecodeError:
+                return (False, "Output must be valid JSON")
+        else:
+            data = result.raw
+        
+        required_amenities = [
+            "markets", "gyms", "bus_parks", "railway_terminals",
+            "stadiums", "malls", "airports", "seaports"
+        ]
+        
+        errors = []
+        
+        # Check property_id
+        if not data.get("property_id"):
+            errors.append("Missing property_id")
+        
+        # Check coordinates
+        coords = data.get("coordinates", {})
+        if not coords.get("lat") or not coords.get("lng"):
+            errors.append("Missing coordinates (lat/lng)")
+        
+        # Check all amenity categories exist
+        amenities = data.get("amenities", {})
+        for amenity in required_amenities:
+            if amenity not in amenities:
+                errors.append(f"Missing amenity category: {amenity}")
+            else:
+                # Each amenity should have a score
+                if "score" not in amenities[amenity]:
+                    errors.append(f"Missing score for {amenity}")
+        
+        # Check overall_score
+        if "overall_score" not in data:
+            errors.append("Missing overall_score")
+        
+        # Check advantages and disadvantages
+        if "advantages" not in data or not isinstance(data.get("advantages"), list):
+            errors.append("Missing or invalid advantages array")
+        if "disadvantages" not in data or not isinstance(data.get("disadvantages"), list):
+            errors.append("Missing or invalid disadvantages array")
+        
+        if errors:
+            return (False, "Validation failed:\n" + "\n".join(errors))
+        
+        return (True, result.raw)
+        
+    except Exception as e:
+        return (False, f"Validation error: {str(e)}")
+
+
+def validate_location_report(result: TaskOutput) -> Tuple[bool, Any]:
+    """Validate the final location report has all required sections."""
+    try:
+        if isinstance(result.raw, str):
+            try:
+                data = json.loads(result.raw)
+            except json.JSONDecodeError:
+                return (False, "Output must be valid JSON")
+        else:
+            data = result.raw
+        
+        errors = []
+        
+        # Check metadata
+        if "metadata" not in data:
+            errors.append("Missing metadata section")
+        
+        # Check properties array
+        if "properties" not in data or not isinstance(data.get("properties"), list):
+            errors.append("Missing or invalid properties array")
+        elif len(data["properties"]) == 0:
+            errors.append("Properties array is empty")
+        
+        # Check comparison section (if multiple properties)
+        if len(data.get("properties", [])) > 1 and "comparison" not in data:
+            errors.append("Missing comparison section for multiple properties")
+        
+        if errors:
+            return (False, "Report validation failed:\n" + "\n".join(errors))
+        
+        return (True, result.raw)
+        
+    except Exception as e:
+        return (False, f"Validation error: {str(e)}")
 
 llm = LLM(
     model="openrouter/deepseek/deepseek-chat",
