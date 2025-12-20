@@ -1,45 +1,385 @@
 # Call Agent Crew Tasks - Hierarchical Process
+# Manager routes calls to Inspector (rent/buy) or Negotiator (acquisition)
 
 route_calls:
   description: >
-    Review the approved properties and their engagement intents from {approved_properties}.
-    Route each property to either the Inspector (for rent/buy intent) or Negotiator 
-    (for acquisition intent). Coordinate the call sequence and ensure all properties 
-    are processed.
+    Review the approved properties from {approved_properties} and create a 
+    call routing plan based on engagement intent.
+    
+    STEP 1 - VALIDATE CONTACTS:
+    For each property, verify contact information:
+    - Phone number exists and appears valid
+    - Contact name is available
+    - Property address is confirmed
+    Flag any properties with missing/invalid contacts.
+    
+    STEP 2 - DETERMINE ROUTING:
+    Based on {engagement_intent} for each property:
+    - "rent" or "buy" → Route to Inspector
+    - "acquisition" or "invest" → Route to Negotiator
+    
+    STEP 3 - PRIORITIZE CALLS:
+    Order calls by:
+    1. User-specified priority (if provided)
+    2. Time zone optimization (call during business hours)
+    3. Property value (higher value = higher priority)
+    
+    STEP 4 - ASSIGN CALL SLOTS:
+    Create clear assignments with retry strategy:
+    - Primary attempt: Assigned agent
+    - Retry 1: Same agent, different time
+    - Retry 2: Same agent, leave voicemail
+    - Max 3 attempts per property
+    
+    ERROR HANDLING:
+    - Properties with invalid contacts → Flag for user review
+    - Unknown engagement intent → Default to Inspector
   expected_output: >
-    A routing plan indicating which agent handles each property, with call priorities 
-    and any special instructions based on user questions.
+    A JSON routing plan:
+    {
+      "total_properties": 4,
+      "routing_summary": {
+        "inspector_calls": 3,
+        "negotiator_calls": 1,
+        "flagged_invalid": 0
+      },
+      "call_queue": [
+        {
+          "priority": 1,
+          "property_id": "prop_001",
+          "address": "123 Main St, Austin, TX",
+          "contact": {
+            "name": "John Smith",
+            "phone": "+1-512-555-0123",
+            "role": "listing_agent"
+          },
+          "engagement_intent": "buy",
+          "assigned_agent": "inspector",
+          "user_questions": ["Is parking included?", "Pet policy?"],
+          "retry_strategy": {
+            "max_attempts": 3,
+            "retry_interval_hours": 4
+          }
+        },
+        {
+          "priority": 2,
+          "property_id": "prop_002",
+          "address": "456 Oak Ave, Austin, TX",
+          "contact": {
+            "name": "Jane Doe",
+            "phone": "+1-512-555-0456",
+            "role": "property_owner"
+          },
+          "engagement_intent": "acquisition",
+          "assigned_agent": "negotiator",
+          "investor_budget": "$500,000 - $750,000",
+          "retry_strategy": {
+            "max_attempts": 3,
+            "retry_interval_hours": 24
+          }
+        }
+      ],
+      "flagged_properties": []
+    }
   agent: manager
 
 conduct_inspection_calls:
   description: >
-    For properties with rent/buy intent, contact the property agents using the 
-    contact information from {property_contacts}. Navigate any phone menus, 
-    request inspection bookings, and ask the user-defined questions: {user_questions}.
-    Record the full conversation transcript and any booking confirmations.
+    Execute inspection booking calls for properties routed to Inspector.
+    
+    STEP 1 - PRE-CALL PREPARATION:
+    For each assigned property:
+    - Review property details and listing information
+    - Prepare user-defined questions: {user_questions}
+    - Note any specific requirements (accessibility, timing preferences)
+    
+    STEP 2 - MAKE THE CALL:
+    Call flow:
+    1. Navigate any IVR/phone menu
+    2. Introduce yourself: "Hi, I'm calling about the property at [address]"
+    3. State purpose: "My client is interested in scheduling a viewing"
+    4. Request available times
+    5. Ask all user-defined questions
+    6. Confirm booking details
+    7. Thank and end call professionally
+    
+    STEP 3 - HANDLE CALL OUTCOMES:
+    
+    SUCCESS (booking confirmed):
+    - Record exact date, time, location
+    - Note contact person for the viewing
+    - Capture any preparation instructions
+    
+    PARTIAL SUCCESS (information gathered, no booking):
+    - Document why booking wasn't possible
+    - Record any information obtained
+    - Note callback time if suggested
+    
+    NO ANSWER:
+    - Log attempt with timestamp
+    - Leave voicemail if available
+    - Schedule retry per routing plan
+    
+    VOICEMAIL:
+    - Leave message: "Hi, this is [name] calling about the property at [address]. 
+      My client is interested in scheduling a viewing. Please call back at [number]."
+    - Log voicemail left
+    
+    REJECTED/UNAVAILABLE:
+    - Document reason (property rented, not showing, etc.)
+    - Note if property should be removed from list
+    
+    STEP 4 - DOCUMENT EVERYTHING:
+    Record full transcript with timestamps and speaker labels.
   expected_output: >
-    Call results including: success status, full transcript, booking confirmation 
-    details (date, time, agent name), and answers to user questions.
+    A JSON array of inspection call results:
+    [
+      {
+        "property_id": "prop_001",
+        "call_id": "call_001",
+        "attempt_number": 1,
+        "timestamp": "2024-01-15T10:30:00Z",
+        "duration_seconds": 180,
+        "outcome": "booking_confirmed",
+        "booking_details": {
+          "date": "2024-01-18",
+          "time": "14:00",
+          "address": "123 Main St, Austin, TX",
+          "contact_person": "John Smith",
+          "contact_phone": "+1-512-555-0123",
+          "special_instructions": "Ring doorbell, wait at gate"
+        },
+        "questions_answered": [
+          {"question": "Is parking included?", "answer": "Yes, 1 covered spot"},
+          {"question": "Pet policy?", "answer": "Cats allowed, no dogs"}
+        ],
+        "additional_info": "Agent mentioned price is negotiable for longer lease",
+        "transcript": "[00:00] Agent: Hello, this is John Smith...\n[00:05] Inspector: Hi, I'm calling about...",
+        "next_action": "none"
+      },
+      {
+        "property_id": "prop_003",
+        "call_id": "call_002",
+        "attempt_number": 1,
+        "timestamp": "2024-01-15T10:45:00Z",
+        "duration_seconds": 0,
+        "outcome": "no_answer",
+        "voicemail_left": true,
+        "transcript": null,
+        "next_action": "retry_scheduled",
+        "retry_at": "2024-01-15T14:45:00Z"
+      }
+    ]
   agent: inspector
+  context:
+    - route_calls
 
 conduct_negotiation_calls:
   description: >
-    For properties with acquisition intent, contact the property owners using 
-    the contact information from {property_contacts}. Use persuasive conversation 
-    techniques to gauge selling interest. If interest exists, initiate preliminary 
-    negotiation discussions. Handle disinterest gracefully and document all responses.
+    Execute acquisition negotiation calls for properties routed to Negotiator.
+    
+    STEP 1 - PRE-CALL PREPARATION:
+    For each assigned property:
+    - Review property details and estimated value
+    - Note investor budget range: {investor_budget}
+    - Prepare opening approach based on owner type
+    
+    STEP 2 - MAKE THE CALL:
+    Call flow:
+    1. Navigate any IVR/phone menu
+    2. Introduce yourself professionally
+    3. Establish credibility: "I represent real estate investors..."
+    4. Gauge interest: "Have you considered selling the property at [address]?"
+    5. Listen actively for motivation signals
+    6. If interested: Discuss preliminary terms
+    7. If not interested: Plant seeds for future, end gracefully
+    8. Thank and end call professionally
+    
+    STEP 3 - HANDLE CALL OUTCOMES:
+    
+    INTERESTED:
+    - Document level of interest (curious, considering, ready to sell)
+    - Record any price expectations mentioned
+    - Note timeline preferences
+    - Discuss next steps (send offer, schedule meeting)
+    
+    NOT INTERESTED NOW:
+    - Document reason if given
+    - Ask permission for future contact
+    - Note any conditions that might change their mind
+    
+    FIRM NO:
+    - Thank them for their time
+    - Do not push further
+    - Document for records
+    
+    NO ANSWER:
+    - Log attempt with timestamp
+    - Leave brief, professional voicemail
+    - Schedule retry per routing plan
+    
+    HOSTILE/ANGRY:
+    - Apologize for any inconvenience
+    - End call immediately
+    - Flag property as "do not contact"
+    
+    STEP 4 - DOCUMENT EVERYTHING:
+    Record full transcript, owner sentiment, and recommended follow-up.
   expected_output: >
-    Negotiation results including: owner response (interested/not interested), 
-    preliminary terms discussed, follow-up actions, and full conversation transcript.
+    A JSON array of negotiation call results:
+    [
+      {
+        "property_id": "prop_002",
+        "call_id": "call_003",
+        "attempt_number": 1,
+        "timestamp": "2024-01-15T11:00:00Z",
+        "duration_seconds": 420,
+        "outcome": "interested",
+        "owner_sentiment": "curious",
+        "interest_level": "considering",
+        "price_expectations": {
+          "mentioned": true,
+          "range": "$600,000 - $700,000",
+          "flexibility": "some room for negotiation"
+        },
+        "timeline": "Would consider selling in 3-6 months",
+        "motivation_signals": ["Mentioned retirement plans", "Property maintenance becoming burden"],
+        "next_steps": {
+          "action": "send_preliminary_offer",
+          "deadline": "2024-01-22",
+          "follow_up_call": "2024-01-25"
+        },
+        "transcript": "[00:00] Owner: Hello?\n[00:02] Negotiator: Hi, this is...",
+        "recommended_strategy": "Owner is motivated by retirement timeline. Emphasize quick closing and hassle-free process in offer."
+      },
+      {
+        "property_id": "prop_004",
+        "call_id": "call_004",
+        "attempt_number": 1,
+        "timestamp": "2024-01-15T11:15:00Z",
+        "duration_seconds": 60,
+        "outcome": "not_interested",
+        "owner_sentiment": "polite_decline",
+        "reason": "Recently renovated, planning to keep long-term",
+        "future_contact_permitted": true,
+        "follow_up_in_months": 12,
+        "transcript": "[00:00] Owner: Hello?\n[00:02] Negotiator: Hi, this is...",
+        "recommended_strategy": "Revisit in 12 months. Owner may reconsider after enjoying renovations."
+      }
+    ]
   agent: negotiator
+  context:
+    - route_calls
 
 compile_call_report:
   description: >
-    Compile all call results from Inspector and Negotiator agents into a structured 
-    JSON report. Include all transcripts, booking confirmations, negotiation outcomes, 
-    and any failed call attempts that need retry scheduling.
+    Compile all call results into a comprehensive JSON report for the 
+    frontend and Delivery Phase.
+    
+    REPORT STRUCTURE:
+    
+    1. METADATA:
+       - Report generation timestamp
+       - Total calls attempted
+       - Success/failure breakdown
+       - Crew execution duration
+    
+    2. INSPECTION RESULTS:
+       For each inspection call:
+       - Booking status and details
+       - Questions answered
+       - Full transcript
+       - Next actions required
+    
+    3. NEGOTIATION RESULTS:
+       For each negotiation call:
+       - Owner interest level
+       - Price expectations (if discussed)
+       - Recommended follow-up strategy
+       - Full transcript
+    
+    4. RETRY QUEUE:
+       Properties requiring follow-up:
+       - Failed calls needing retry
+       - Scheduled callbacks
+       - Voicemails awaiting response
+    
+    5. FLAGS & ALERTS:
+       - Properties to remove (rented, not available)
+       - Hostile contacts (do not call again)
+       - High-priority opportunities
+    
+    FORMAT REQUIREMENTS:
+    - All timestamps in ISO 8601 format
+    - Phone numbers in E.164 format
+    - Transcripts with speaker labels and timestamps
+    - Consistent field names (snake_case)
   expected_output: >
-    A comprehensive JSON file (call_results.json) containing all call outcomes 
-    organized by property, with clear status indicators and complete data.
+    A comprehensive JSON report:
+    {
+      "metadata": {
+        "generated_at": "2024-01-15T12:00:00Z",
+        "crew_execution_id": "crew_call_001",
+        "total_properties": 4,
+        "calls_attempted": 4,
+        "calls_successful": 3,
+        "calls_failed": 1,
+        "execution_duration_seconds": 1800
+      },
+      "inspection_results": {
+        "total": 3,
+        "bookings_confirmed": 2,
+        "pending_callback": 1,
+        "calls": [
+          {
+            "property_id": "prop_001",
+            "status": "booking_confirmed",
+            "booking": {
+              "date": "2024-01-18",
+              "time": "14:00",
+              "contact": "John Smith"
+            },
+            "questions_answered": 2,
+            "transcript_available": true
+          }
+        ]
+      },
+      "negotiation_results": {
+        "total": 1,
+        "interested": 1,
+        "not_interested": 0,
+        "calls": [
+          {
+            "property_id": "prop_002",
+            "status": "interested",
+            "interest_level": "considering",
+            "price_range": "$600K-$700K",
+            "recommended_action": "send_preliminary_offer",
+            "transcript_available": true
+          }
+        ]
+      },
+      "retry_queue": [
+        {
+          "property_id": "prop_003",
+          "reason": "no_answer",
+          "attempts_made": 1,
+          "next_attempt": "2024-01-15T14:45:00Z",
+          "max_attempts": 3
+        }
+      ],
+      "flags": {
+        "remove_from_list": [],
+        "do_not_contact": [],
+        "high_priority": ["prop_002: Owner interested, send offer ASAP"]
+      },
+      "full_transcripts": {
+        "prop_001": "[Full transcript here...]",
+        "prop_002": "[Full transcript here...]"
+      }
+    }
   agent: report_agent
+  context:
+    - conduct_inspection_calls
+    - conduct_negotiation_calls
   output_file: output/call_results.json
