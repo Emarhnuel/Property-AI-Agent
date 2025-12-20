@@ -269,6 +269,8 @@ class LocationAnalyzerCrew:
             config=self.tasks_config["analyze_property"],  # type: ignore[index]
             agent=self.location_analyzer_1(),
             async_execution=True,
+            guardrail=validate_location_analysis,
+            guardrail_max_retries=2,
         )
 
     @task
@@ -278,6 +280,8 @@ class LocationAnalyzerCrew:
             config=self.tasks_config["analyze_property"],  # type: ignore[index]
             agent=self.location_analyzer_2(),
             async_execution=True,
+            guardrail=validate_location_analysis,
+            guardrail_max_retries=2,
         )
 
     @task
@@ -287,6 +291,8 @@ class LocationAnalyzerCrew:
             config=self.tasks_config["analyze_property"],  # type: ignore[index]
             agent=self.location_analyzer_3(),
             async_execution=True,
+            guardrail=validate_location_analysis,
+            guardrail_max_retries=2,
         )
 
     @task
@@ -296,6 +302,8 @@ class LocationAnalyzerCrew:
             config=self.tasks_config["analyze_property"],  # type: ignore[index]
             agent=self.location_analyzer_4(),
             async_execution=True,
+            guardrail=validate_location_analysis,
+            guardrail_max_retries=2,
         )
 
     @task
@@ -305,6 +313,8 @@ class LocationAnalyzerCrew:
             config=self.tasks_config["analyze_property"],  # type: ignore[index]
             agent=self.location_analyzer_5(),
             async_execution=True,
+            guardrail=validate_location_analysis,
+            guardrail_max_retries=2,
         )
 
     @task
@@ -314,6 +324,8 @@ class LocationAnalyzerCrew:
             config=self.tasks_config["analyze_property"],  # type: ignore[index]
             agent=self.location_analyzer_6(),
             async_execution=True,
+            guardrail=validate_location_analysis,
+            guardrail_max_retries=2,
         )
 
     @task
@@ -322,6 +334,8 @@ class LocationAnalyzerCrew:
         return Task(
             config=self.tasks_config["compile_location_report"],  # type: ignore[index]
             output_file="output/location_intelligence.json",
+            guardrail=validate_location_report,
+            guardrail_max_retries=2,
         )
 
     @crew
