@@ -27,7 +27,7 @@ manager:
     You handle edge cases expertly: properties with multiple contacts get 
     sequential attempts, failed calls get scheduled for retry with different 
     approaches, and you never let a property slip through without at least 
-    3 contact attempts. You track call metrics obsessively - connection rates, 
+    7 contact attempts. You track call metrics obsessively - connection rates, 
     average call duration, and successful booking/negotiation rates.
 
 inspector:
