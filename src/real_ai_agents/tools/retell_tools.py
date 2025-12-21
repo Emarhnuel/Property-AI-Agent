@@ -20,6 +20,7 @@ except ImportError:
     Retell = None
 
 
+
 # Environment variables
 RETELL_API_KEY = os.getenv("RETELL_API_KEY")
 RETELL_FROM_NUMBER = os.getenv("RETELL_FROM_NUMBER")  # Your Retell-purchased number
