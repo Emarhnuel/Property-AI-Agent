@@ -20,7 +20,6 @@ except ImportError:
     Retell = None
 
 
-
 # Environment variables
 RETELL_API_KEY = os.getenv("RETELL_API_KEY")
 RETELL_FROM_NUMBER = os.getenv("RETELL_FROM_NUMBER")  # Your Retell-purchased number
@@ -311,13 +310,14 @@ def check_call_status(call_id: str) -> str:
         client = _get_retell_client()
         call_data = client.call.retrieve(call_id)
         
+        # Valid statuses: registered, ongoing, ended, error
         return json.dumps({
             "success": True,
             "call_id": call_id,
             "call_status": call_data.call_status,
             "in_progress": call_data.call_status in ["registered", "ongoing"],
             "completed": call_data.call_status == "ended",
-            "failed": call_data.call_status in ["error", "failed"]
+            "failed": call_data.call_status == "error"
         })
         
     except Exception as e:
