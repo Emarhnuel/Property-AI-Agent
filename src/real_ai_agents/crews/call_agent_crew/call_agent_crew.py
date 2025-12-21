@@ -23,6 +23,7 @@ llm = LLM(
 )
 
 
+
 @CrewBase
 class CallAgentCrew:
     """Call Agent Crew - Hierarchical process for voice AI interactions.
@@ -45,6 +46,9 @@ class CallAgentCrew:
         return Agent(
             config=self.agents_config["manager"],  # type: ignore[index]
             verbose=True,
+            llm=llm,
+            max_iter=8,
+            cache=True,
         )
 
     @agent
@@ -53,7 +57,12 @@ class CallAgentCrew:
         return Agent(
             config=self.agents_config["inspector"],  # type: ignore[index]
             verbose=True,
-            # tools=[voice_ai_tool],  # TODO: Add Voice AI tools
+            llm=llm,
+            max_iter=10,
+            max_rpm=10,
+            cache=True,
+            max_retry_limit=3,
+            tools=[make_inspection_call, get_call_result, check_call_status],
         )
 
     @agent
@@ -64,7 +73,12 @@ class CallAgentCrew:
             reasoning=True,  # Enable reasoning for complex persuasion strategies
             max_reasoning_attempts=3,
             verbose=True,
-            # tools=[voice_ai_tool],  # TODO: Add Voice AI tools
+            llm=llm,
+            max_iter=10,
+            max_rpm=10,
+            cache=True,
+            max_retry_limit=3,
+            tools=[make_negotiation_call, get_call_result, check_call_status],
         )
 
     @agent
@@ -73,6 +87,9 @@ class CallAgentCrew:
         return Agent(
             config=self.agents_config["report_agent"],  # type: ignore[index]
             verbose=True,
+            llm=llm,
+            max_iter=5,
+            cache=True,
         )
 
     @task
@@ -111,7 +128,7 @@ class CallAgentCrew:
             agents=self.agents,
             tasks=self.tasks,
             process=Process.hierarchical,
-            manager_llm="gpt-4o",  # Manager LLM for hierarchical process
+            manager_llm=llm,
             memory=True,
             planning=True,  # Enable planning for call strategy
             verbose=True,
