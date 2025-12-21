@@ -225,8 +225,8 @@ def get_call_result(call_id: str, max_wait_seconds: int = 300) -> str:
         while True:
             call_data = client.call.retrieve(call_id)
             
-            # Check if call has ended
-            if call_data.call_status in ["ended", "error", "failed"]:
+            # Check if call has ended (valid statuses: registered, ongoing, ended, error)
+            if call_data.call_status in ["ended", "error"]:
                 break
             
             # Check timeout
@@ -241,18 +241,30 @@ def get_call_result(call_id: str, max_wait_seconds: int = 300) -> str:
             
             time.sleep(poll_interval)
         
-        # Format transcript from utterances
-        transcript_lines = []
-        if hasattr(call_data, 'transcript') and call_data.transcript:
-            for utterance in call_data.transcript:
-                speaker = utterance.get('role', 'unknown')
-                content = utterance.get('content', '')
-                timestamp = utterance.get('timestamp', 0)
-                minutes = int(timestamp // 60000)
-                seconds = int((timestamp % 60000) // 1000)
-                transcript_lines.append(f"[{minutes:02d}:{seconds:02d}] {speaker}: {content}")
+        # Get transcript - API returns both transcript (string) and transcript_object (structured)
+        # Use the string directly for simplicity, or parse transcript_object for word-level timing
+        transcript_text = getattr(call_data, 'transcript', None)
         
-        transcript_text = "\n".join(transcript_lines) if transcript_lines else None
+        # If we need structured transcript with timestamps, parse transcript_object
+        structured_transcript = []
+        if hasattr(call_data, 'transcript_object') and call_data.transcript_object:
+            for utterance in call_data.transcript_object:
+                role = getattr(utterance, 'role', 'unknown')  # "agent" or "user"
+                content = getattr(utterance, 'content', '')
+                words = getattr(utterance, 'words', [])  # [{word, start, end}] - times in seconds
+                
+                # Get start time from first word if available
+                start_time_sec = 0
+                if words and len(words) > 0:
+                    start_time_sec = words[0].get('start', 0) if isinstance(words[0], dict) else 0
+                
+                minutes = int(start_time_sec // 60)
+                seconds = int(start_time_sec % 60)
+                structured_transcript.append({
+                    "timestamp": f"{minutes:02d}:{seconds:02d}",
+                    "role": role,
+                    "content": content
+                })
         
         # Calculate duration
         duration_seconds = None
@@ -266,6 +278,7 @@ def get_call_result(call_id: str, max_wait_seconds: int = 300) -> str:
             "call_status": call_data.call_status,
             "duration_seconds": duration_seconds,
             "transcript": transcript_text,
+            "structured_transcript": structured_transcript,
             "recording_url": getattr(call_data, 'recording_url', None),
             "metadata": getattr(call_data, 'metadata', {}),
             "collected_variables": getattr(call_data, 'collected_dynamic_variables', {}),
