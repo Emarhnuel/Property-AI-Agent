@@ -1,8 +1,26 @@
 from typing import List
+import os
 
-from crewai import Agent, Crew, Process, Task
+from crewai import Agent, Crew, Process, Task, LLM
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai.project import CrewBase, agent, crew, task
+
+from src.real_ai_agents.tools.retell_tools import (
+    make_inspection_call,
+    make_negotiation_call,
+    get_call_result,
+    check_call_status,
+)
+
+
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+
+llm = LLM(
+    model="openrouter/deepseek/deepseek-chat",
+    base_url="https://openrouter.ai/api/v1",
+    api_key=OPENROUTER_API_KEY,
+    temperature=0.1,
+)
 
 
 @CrewBase
