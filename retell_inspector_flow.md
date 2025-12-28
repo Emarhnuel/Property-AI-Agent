@@ -40,9 +40,11 @@ graph TD
   - If wrong person → ask for transfer → `navigate_ivr`
 
 ### 2. **navigate_ivr**
-- **Purpose**: Handle phone menu systems
-- **Prompt**: Navigate IVR menus to reach the right department
-- **Functions**: `Press Digit (IVR Navigation)` (if needed)
+- **Purpose**: Handle phone menu systems OR human receptionist
+- **Prompt**: 
+  - If IVR: Navigate menus to reach listing agent
+  - If human: "Hi, I'm calling about a property listing. Could you connect me with the listing agent for {{property_address}}?"
+- **Functions**: `Press Digit (IVR Navigation)` (only if IVR detected)
 - **Transitions**: Always → `identify_agent`
 
 ### 3. **identify_agent**
