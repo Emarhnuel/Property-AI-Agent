@@ -119,6 +119,7 @@ tavily_search = TavilySearchTool(
             include_raw_content=True,
             include_images=True
         )
+        
 tavily_extractor = TavilyExtractorTool(
             extract_depth="advanced",
             include_images=True
