@@ -104,6 +104,7 @@ def make_inspection_call(
             "call_status": call_response.call_status,
             "property_id": property_id,
             "to_number": to_number,
+            "call_type": "inspection",
             "message": "Inspection call initiated successfully"
         })
         
@@ -184,6 +185,7 @@ def make_negotiation_call(
             "call_status": call_response.call_status,
             "property_id": property_id,
             "to_number": to_number,
+            "call_type": "negotiation",
             "message": "Negotiation call initiated successfully"
         })
         
@@ -240,17 +242,17 @@ def get_call_result(call_id: str, max_wait_seconds: int = 300) -> str:
             
             time.sleep(poll_interval)
         
-        # Get transcript - API returns both transcript (string) and transcript_object (structured)
-        # Use the string directly for simplicity, or parse transcript_object for word-level timing
+        # Get transcript and call analysis
         transcript_text = getattr(call_data, 'transcript', None)
+        call_analysis = getattr(call_data, 'call_analysis', {})
         
-        # If we need structured transcript with timestamps, parse transcript_object
+        # Parse structured transcript with timestamps
         structured_transcript = []
         if hasattr(call_data, 'transcript_object') and call_data.transcript_object:
             for utterance in call_data.transcript_object:
                 role = getattr(utterance, 'role', 'unknown')  # "agent" or "user"
                 content = getattr(utterance, 'content', '')
-                words = getattr(utterance, 'words', [])  # [{word, start, end}] - times in seconds
+                words = getattr(utterance, 'words', [])
                 
                 # Get start time from first word if available
                 start_time_sec = 0
@@ -279,6 +281,7 @@ def get_call_result(call_id: str, max_wait_seconds: int = 300) -> str:
             "transcript": transcript_text,
             "structured_transcript": structured_transcript,
             "recording_url": getattr(call_data, 'recording_url', None),
+            "call_analysis": call_analysis,
             "metadata": getattr(call_data, 'metadata', {}),
             "collected_variables": getattr(call_data, 'collected_dynamic_variables', {}),
             "disconnection_reason": getattr(call_data, 'disconnection_reason', None)
@@ -291,7 +294,7 @@ def get_call_result(call_id: str, max_wait_seconds: int = 300) -> str:
             "error": str(e)
         })
 
-
+ 
 @tool("Check Call Status")
 def check_call_status(call_id: str) -> str:
     """
