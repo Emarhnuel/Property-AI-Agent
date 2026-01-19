@@ -8,6 +8,7 @@ from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai.project import CrewBase, agent, crew, task
 from crewai.tasks.hallucination_guardrail import HallucinationGuardrail
 from crewai.tasks.task_output import TaskOutput
+from crewai_tools import TavilySearchTool, TavilyExtractorTool
 
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -111,6 +112,18 @@ llm = LLM(
     #stream=True
 )
 
+
+tavily_search = TavilySearchTool(
+            search_depth="advanced",
+            max_results=10,
+            include_raw_content=True,
+            include_images=True
+        )
+tavily_extractor = TavilyExtractorTool(
+            extract_depth="advanced",
+            include_images=True
+        )
+
 @CrewBase
 class ResearchCrew:
     """Research Agent Crew - Sequential process for property discovery.
@@ -132,7 +145,7 @@ class ResearchCrew:
 
     @agent
     def scraper(self) -> Agent:
-        """Scraper agent that finds property listings."""
+        """Scraper agent that finds property listings."""        
         return Agent(
             config=self.agents_config["scraper"],  # type: ignore[index]
             verbose=True,
@@ -141,8 +154,8 @@ class ResearchCrew:
             max_iter=10,
             cache=True, 
             respect_context_window=True, 
-            max_retry_limit=3, 
-            # tools=[firecrawl_tool],  # TODO: Add Firecrawl tool
+            max_retry_limit=3,
+            tools=[tavily_search, tavily_extractor],
         )
 
     @agent
