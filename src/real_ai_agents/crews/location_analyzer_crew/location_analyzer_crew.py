@@ -352,7 +352,7 @@ class LocationAnalyzerCrew:
             agents=self.agents,
             tasks=self.tasks,
             process=Process.hierarchical,
-            manager_agent=manager,
+            manager_agent=self.manager(),
             memory=True,
             planning=True,
             verbose=True,
