@@ -7,6 +7,8 @@ from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai.project import CrewBase, agent, crew, task
 from crewai.tasks.task_output import TaskOutput
 
+from ..tools.google_maps_tools import google_places_geocode_tool, google_places_nearby_tool
+
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
@@ -161,7 +163,7 @@ class LocationAnalyzerCrew:
             max_rpm=15,
             cache=True,
             max_retry_limit=3,
-            # tools=[google_maps_tool],  # TODO: Add Google Maps tool
+            tools=[google_places_geocode_tool, google_places_nearby_tool],
         )
 
     @agent
@@ -194,6 +196,7 @@ class LocationAnalyzerCrew:
             max_rpm=15,
             cache=True,
             max_retry_limit=3,
+            tools=[google_places_geocode_tool, google_places_nearby_tool],
         )
 
     @agent
@@ -210,6 +213,7 @@ class LocationAnalyzerCrew:
             max_rpm=15,
             cache=True,
             max_retry_limit=3,
+            tools=[google_places_geocode_tool, google_places_nearby_tool],
         )
 
     @agent
@@ -226,6 +230,7 @@ class LocationAnalyzerCrew:
             max_rpm=15,
             cache=True,
             max_retry_limit=3,
+            tools=[google_places_geocode_tool, google_places_nearby_tool],
         )
 
     @agent
@@ -242,6 +247,7 @@ class LocationAnalyzerCrew:
             max_rpm=15,
             cache=True,
             max_retry_limit=3,
+            tools=[google_places_geocode_tool, google_places_nearby_tool],
         )
 
     @agent
