@@ -180,6 +180,7 @@ class LocationAnalyzerCrew:
             max_rpm=15,
             cache=True,
             max_retry_limit=3,
+            tools=[google_places_geocode_tool, google_places_nearby_tool],
         )
 
     @agent
@@ -351,7 +352,7 @@ class LocationAnalyzerCrew:
             agents=self.agents,
             tasks=self.tasks,
             process=Process.hierarchical,
-            manager_llm=llm,
+            manager_agent=manager,
             memory=True,
             planning=True,
             verbose=True,
