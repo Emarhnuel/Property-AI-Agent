@@ -16,13 +16,52 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 # ============== GUARDRAILS ==============
 
+def truncate_listings_guardrail(result: TaskOutput) -> Tuple[bool, Any]:
+    """
+    Guardrail to ensure strictly no more than 6 listings are passed to the next step.
+    If more than 6 are found, it truncates the list.
+    """
+    try:
+        # Parse the result
+        if isinstance(result.raw, str):
+            # Clean up markdown code blocks if present
+            clean_raw = result.raw.replace("```json", "").replace("```", "").strip()
+            try:
+                data = json.loads(clean_raw)
+            except json.JSONDecodeError:
+                return (False, "Output must be valid JSON to verify listing count.")
+        else:
+            data = result.raw
+
+        # Check and Truncate
+        if isinstance(data, dict) and "listings" in data and isinstance(data["listings"], list):
+            count = len(data["listings"])
+            if count > 6:
+                # Slice the list to exactly 6
+                data["listings"] = data["listings"][:6]
+                
+                # Update summary if present
+                if "scrape_summary" in data:
+                    data["scrape_summary"]["original_count"] = count
+                    data["scrape_summary"]["truncated_count"] = 6
+                    data["scrape_summary"]["note"] = "Listings truncated to 6 by guardrail."
+
+        # Return success with the modified data
+        # We dump it back to string to ensure consistency for the next task
+        return (True, json.dumps(data))
+
+    except Exception as e:
+        return (False, f"Error in truncation guardrail: {str(e)}")
+
+
 def validate_property_extraction(result: TaskOutput) -> Tuple[bool, Any]:
     """Validate that extracted property data contains all mandatory fields."""
     try:
         # Parse the result - handle both string and dict
         if isinstance(result.raw, str):
+            clean_raw = result.raw.replace("```json", "").replace("```", "").strip()
             try:
-                data = json.loads(result.raw)
+                data = json.loads(clean_raw)
             except json.JSONDecodeError:
                 return (False, "Output must be valid JSON")
         else:
@@ -194,6 +233,8 @@ class ResearchCrew:
         """Task to scrape property listings from platforms."""
         return Task(
             config=self.tasks_config["scrape_listings"],  # type: ignore[index]
+            guardrail=truncate_listings_guardrail, # Added the truncation guardrail here
+            guardrail_max_retries=1, # No need to retry much, just truncate and proceed
         )
 
     @task
