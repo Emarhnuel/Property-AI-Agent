@@ -134,7 +134,7 @@ def google_places_nearby_tool(
                         "latitude": latitude,
                         "longitude": longitude
                     },
-                    "radius": float(radius_meters)
+                    "radius": min(float(radius_meters), 5000.0)
                 }
             }
         }
