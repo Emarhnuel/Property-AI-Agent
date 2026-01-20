@@ -49,14 +49,40 @@ def google_places_geocode_tool(address: str, country: str = None) -> Dict[str, A
         place = data["places"][0]
         location = place.get("location", {})
         
-        return {
-            "success": True,
-            "latitude": location.get("latitude"),
-            "longitude": location.get("longitude"),
-            "formatted_address": place.get("formattedAddress", address),
-            "name": place.get("displayName", {}).get("text", ""),
-            "place_id": place.get("id", "")
-        }
+        # Validate that location contains valid coordinates
+        try:
+            lat = location.get("latitude")
+            lon = location.get("longitude")
+            
+            if lat is None or lon is None:
+                return {
+                    "success": False,
+                    "error": "Location coordinates not available for this address",
+                    "formatted_address": place.get("formattedAddress", address),
+                    "name": place.get("displayName", {}).get("text", ""),
+                    "place_id": place.get("id", "")
+                }
+            
+            # Ensure coordinates are valid floats
+            latitude = float(lat)
+            longitude = float(lon)
+            
+            return {
+                "success": True,
+                "latitude": latitude,
+                "longitude": longitude,
+                "formatted_address": place.get("formattedAddress", address),
+                "name": place.get("displayName", {}).get("text", ""),
+                "place_id": place.get("id", "")
+            }
+        except (ValueError, TypeError) as e:
+            return {
+                "success": False,
+                "error": f"Invalid coordinate format: {str(e)}",
+                "formatted_address": place.get("formattedAddress", address),
+                "name": place.get("displayName", {}).get("text", ""),
+                "place_id": place.get("id", "")
+            }
         
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 404:
@@ -108,7 +134,7 @@ def google_places_nearby_tool(
                         "latitude": latitude,
                         "longitude": longitude
                     },
-                    "radius": min(radius_meters, 50000.0)
+                    "radius": float(radius_meters)
                 }
             }
         }
