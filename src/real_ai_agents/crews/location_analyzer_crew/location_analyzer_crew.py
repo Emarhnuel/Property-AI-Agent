@@ -214,8 +214,6 @@ class LocationAnalyzerCrew:
         """Location analyzer for property 5."""
         return Agent(
             config=self.agents_config["location_analyzer"],  # type: ignore[index]
-            reasoning=True,
-            max_reasoning_attempts=2,
             respect_context_window=True,
             verbose=True,
             llm=llm,
@@ -231,8 +229,6 @@ class LocationAnalyzerCrew:
         """Location analyzer for property 6."""
         return Agent(
             config=self.agents_config["location_analyzer"],  # type: ignore[index]
-            reasoning=True,
-            max_reasoning_attempts=2,
             respect_context_window=True,
             verbose=True,
             llm=llm,
@@ -348,4 +344,6 @@ class LocationAnalyzerCrew:
             memory=True,
             planning=True,
             verbose=True,
+            
         )
+
