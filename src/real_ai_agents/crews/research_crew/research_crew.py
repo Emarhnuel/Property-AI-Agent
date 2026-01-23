@@ -262,7 +262,6 @@ class ResearchCrew:
         return Task(
             config=self.tasks_config["compile_research_report"],  # type: ignore[index]
             output_file="output/research_results.json",
-            human_input=True,
         )
 
     @crew
