@@ -65,6 +65,9 @@ Create a `.env` file with the following variables:
 # LLM Provider (OpenRouter)
 OPENROUTER_API_KEY=your_openrouter_api_key
 
+# Google Maps Platform
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+
 # Retell AI Voice Calls
 RETELL_API_KEY=your_retell_api_key
 RETELL_FROM_NUMBER=+1234567890          # Your Retell-purchased phone number
@@ -81,6 +84,7 @@ RETELL_NEGOTIATOR_AGENT_ID=agent_xxx    # Retell agent for acquisition calls
 │   │   ├── location_analyzer_crew/      # Geospatial analysis
 │   │   └── research_crew/               # Property discovery
 │   ├── tools/
+│   │   ├── google_maps_tools.py         # Google Maps geocoding & nearby search
 │   │   └── retell_tools.py              # Retell AI voice call tools
 │   └── main.py
 ├── .kiro/specs/                         # Project specifications
