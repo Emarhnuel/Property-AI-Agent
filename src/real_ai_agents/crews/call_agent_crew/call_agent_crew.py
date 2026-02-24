@@ -5,7 +5,7 @@ from crewai import Agent, Crew, Process, Task, LLM
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai.project import CrewBase, agent, crew, task
 
-from src.real_ai_agents.tools.retell_tools import (
+from real_ai_agents.tools.retell_tools import (
     make_inspection_call,
     make_negotiation_call,
     get_call_result,

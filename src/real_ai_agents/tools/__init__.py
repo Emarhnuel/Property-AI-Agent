@@ -8,7 +8,7 @@ This module exports all custom tools used by the crews:
 """
 
 
-from src.real_ai_agents.tools.retell_tools import (
+from real_ai_agents.tools.retell_tools import (
     make_inspection_call,
     make_negotiation_call,
     get_call_result,
