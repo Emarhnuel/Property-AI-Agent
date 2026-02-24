@@ -2,27 +2,31 @@
 
 An intelligent, event-driven AI system designed to act as a proactive real estate representative. Unlike passive search engines, this system automates the entire "top-of-funnel" real estate process—from finding listings and extracting granular data to physically calling agents and owners on your behalf.
 
-
 ## Project Vision
 
 We are building an intelligent, event-driven AI system that automates the complete real estate discovery and engagement process through five distinct phases:
 
-
 ### 1. The Deep Discovery Phase (Data Extraction)
+
 The system initiates by deploying research agents to scrape real estate platforms based on your specific criteria (e.g., "3-bedroom apartments in Lagos" or "distressed properties for sale"). It extracts structured, rich data including full image galleries, listing agent names and phone numbers, and specific property specs.
 
 ### 2. The Human Decision Gate (Quality Control)
+
 Before any costs are incurred on calls or advanced APIs, the workflow pauses. The system presents the sourced properties—complete with the extracted images and specs—to you through a frontend interface where you act as the final decision-maker.
 
 ### 3. The Intelligence Phase (Location Analytics)
+
 For every approved property, the system performs a geospatial analysis using Google Maps data to identify "invisible" factors that listing photos hide, such as traffic congestion, noise pollution, proximity to industrial zones, or distance from essential amenities.
 
 ### 4. The Engagement Phase (Voice AI Branching)
+
 Based on your initial intent, the workflow splits into specialized paths:
+
 - **Path A: The Inspector** (Rent/Buy): Calls property agents, navigates phone menus, books inspections, and asks your pre-defined questions
 - **Path B: The Negotiator** (Acquisition): Calls property owners with persuasion techniques to gauge selling interest and initiate negotiations
 
 ### 5. The Delivery Phase (Reporting)
+
 The system compiles all data into a unified report stored in your user account, with notifications sent via Email or WhatsApp when ready.
 
 ## Key Technical Components
@@ -77,7 +81,7 @@ RETELL_NEGOTIATOR_AGENT_ID=agent_xxx    # Retell agent for acquisition calls
 
 ## Project Structure
 
-```
+```text
 ├── src/real_ai_agents/
 │   ├── crews/
 │   │   ├── call_agent_crew/             # Voice AI call orchestration
