@@ -189,7 +189,7 @@ class ResearchCrew:
             verbose=True,
             llm=llm,
             max_rpm=10,
-            max_iter=10,
+            max_iter=6,
             cache=True, 
             respect_context_window=True, 
             max_retry_limit=3,
@@ -201,7 +201,8 @@ class ResearchCrew:
         """TinyFish extractor agent that visits listing URLs and extracts structured property data."""
         return Agent(
             config=self.agents_config["tinyfish_extractor"],  # type: ignore[index]
-            verbose=True,
+            verbose=False,
+            respect_context_window=True,
             max_iter=6,
             llm=llm,
             tools=[tinyfish_extractor],
