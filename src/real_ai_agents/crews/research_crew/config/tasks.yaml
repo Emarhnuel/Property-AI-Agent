@@ -86,6 +86,7 @@ scrape_listings:
       }
     }
   agent: scraper
+  tool_choice: required
 
 extract_property_data:
   description: >
@@ -153,6 +154,7 @@ extract_property_data:
     - metadata: {listing_url, platform, listing_id, date_listed, days_on_market, status}
     - extraction_notes: any gaps or issues encountered
   agent: tinyfish_extractor
+  tool_choice: required
   context:
     - scrape_listings
 
