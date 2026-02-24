@@ -8,7 +8,8 @@ from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai.project import CrewBase, agent, crew, task
 from crewai.tasks.hallucination_guardrail import HallucinationGuardrail
 from crewai.tasks.task_output import TaskOutput
-from crewai_tools import TavilySearchTool, TavilyExtractorTool
+from crewai_tools import TavilySearchTool
+from real_ai_agents.tools.tinyfish_tools import TinyFishExtractorTool
 
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -159,10 +160,7 @@ tavily_search = TavilySearchTool(
             include_images=True
         )
         
-tavily_extractor = TavilyExtractorTool(
-            extract_depth="advanced",
-            include_images=True
-        )
+tinyfish_extractor = TinyFishExtractorTool()
 
 @CrewBase
 class ResearchCrew:
@@ -170,7 +168,7 @@ class ResearchCrew:
     
     This crew handles the Deep Discovery phase:
     1. Scraper - Finds listings on real estate platforms
-    2. Data Extractor - Structures property data
+    2. TinyFish Extractor - Extracts structured property data via AI browser
     3. Validator - Ensures data quality
     4. Report Agent - Compiles JSON for Human Decision Gate
     
@@ -195,17 +193,18 @@ class ResearchCrew:
             cache=True, 
             respect_context_window=True, 
             max_retry_limit=3,
-            tools=[tavily_search, tavily_extractor],
+            tools=[tavily_search],
         )
 
     @agent
-    def data_extractor(self) -> Agent:
-        """Data extractor agent that structures property data."""
+    def tinyfish_extractor(self) -> Agent:
+        """TinyFish extractor agent that visits listing URLs and extracts structured property data."""
         return Agent(
-            config=self.agents_config["data_extractor"],  # type: ignore[index]
+            config=self.agents_config["tinyfish_extractor"],  # type: ignore[index]
             verbose=True,
             max_iter=6,
-            llm=llm
+            llm=llm,
+            tools=[tinyfish_extractor],
         )
 
     @agent
