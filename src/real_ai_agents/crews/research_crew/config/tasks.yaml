@@ -1,158 +1,93 @@
-# Research Agent Crew Tasks - Sequential Process
+# Research Crew Tasks - Sequential: Scrape → Extract → Validate → Report
 
 scrape_listings:
   description: >
-    Find and scrape property listings matching the criteria: {search_criteria}.
+    Search for properties matching: {search_criteria}.
 
-    PHASE 1 - PLATFORM DISCOVERY:
-    1. Use web search to find "top real estate websites in {location}" or 
-       "best property listing sites in {location}"
-    2. Identify 3-5 most relevant platforms for this specific location:
-       - International: Zillow, Realtor.com, Redfin, Trulia (if applicable)
-       - Regional/local MLS sites specific to the area
-       - Country-specific platforms (e.g., Rightmove for UK, Domain for Australia, 
-         PropertyGuru for Singapore, Lamudi for Philippines, etc.)
-    3. Prioritize platforms that:
-       - Have the most listings for this location
-       - Allow public access without login
-       - Show detailed property information 
-       
+    STEP 1 - SEARCH:
+    Use web search to find "{search_criteria}" (e.g., "2 bedroom flats for rent in Lagos").
+    Identify 2-4 real estate platform websites from the search results that show 
+    property listings for this location (e.g., propertypro.ng, nigeriapropertycentre.com,
+    zillow.com, realtor.com - whatever is relevant for the location).
 
-    PHASE 2 - PROPERTY SEARCH:
-    1. For each selected platform, construct search URLs using the criteria:
-       - Location: {search_criteria.location}
-       - Property type: {search_criteria.property_type}
-       - Price range: {search_criteria.budget}
-       - Bedrooms/bathrooms if specified
-    2. Navigate to search results pages
-    3. Collect ALL listing URLs from search results (paginate if needed)
+    STEP 2 - VISIT PLATFORM PAGES:
+    Click into the most promising platform pages from the search results.
+    These pages typically show multiple properties on a single page.
 
-    PHASE 3 - LISTING SCRAPING:
-    1. Use Firecrawl to render each listing page fully (wait for JavaScript)
-    2. Extract the complete page content including all visible text and HTML
-    3. Capture images, contact info sections, and property details
-    4. Document any pages that failed to load or were blocked
+    STEP 3 - COLLECT INDIVIDUAL PROPERTY LINKS:
+    From each platform page, collect the direct URL link to each individual 
+    property listing that appears to match the user's criteria.
+    Collect up to 15 property links total across all platforms.
 
-    IMPORTANT:
-    - STOP after collecting exactly 6 listings that match the user's criteria
-    - Do NOT continue scraping once you have 6 valid listings
-    - Only count listings that match the search criteria (location, property type, budget)
-    - Include the platform source for each listing
-    - Record timestamps for when each page was scraped
-    - If a platform blocks access, note it and move to alternatives
-    - If you cannot find 6 matching listings across all platforms, return what you found
+    RULES:
+    - Stop after collecting 15 property sure links maximum
+    - Only collect links to individual property pages, not search result pages
+    - Include the platform name for each link
+    - If a platform blocks you, skip it and try the next one
   expected_output: >
-    A JSON object containing:
-
-    1. platforms_discovered: Array of platforms found and used
-    2. listings: Array of raw listing objects
-
-    Structure:
+    A JSON object with the collected property links:
     {
-      "platforms_discovered": [
+      "search_criteria": "{search_criteria}",
+      "platforms_used": ["Platform A", "Platform B"],
+      "property_links": [
         {
-          "name": "Zillow",
-          "url": "https://zillow.com",
-          "reason": "Top US real estate platform with extensive Austin listings",
-          "listings_found": 15
-        },
-        {
-          "name": "Austin MLS",
-          "url": "https://austinmls.com",
-          "reason": "Local MLS with exclusive listings",
-          "listings_found": 8
+          "url": "https://example.com/property/12345",
+          "platform": "Platform A",
+          "brief_title": "2 Bed Flat in Lekki"
         }
       ],
-      "search_criteria_used": {
-        "location": "Austin, TX",
-        "property_type": "apartment",
-        "max_price": 2500,
-        "bedrooms": 2
-      },
-      "listings": [
-        {
-          "listing_url": "https://zillow.com/...",
-          "platform": "Zillow",
-          "raw_content": "Full HTML/text content of the listing page...",
-          "scraped_at": "2024-01-15T10:30:00Z",
-          "scrape_status": "success"
-        }
-      ],
-      "scrape_summary": {
-        "total_attempted": 25,
-        "successful": 23,
-        "failed": 2,
-        "failed_urls": ["https://...", "https://..."]
-      }
+      "total_links": 15
     }
   agent: scraper
   tool_choice: required
 
 extract_property_data:
   description: >
-    Parse the raw listing data and extract comprehensive property information.
+    You have a list of individual property URLs from the previous task.
 
-    Required data to extract for each property:
+    For EACH property URL, use the TinyFish Web Extractor tool to visit the page 
+    and extract the following details:
 
-    PROPERTY IMAGES:
-    - All available image URLs (exterior, interior, rooms, amenities)
-    - Image captions/descriptions if available
-    - Primary/featured image identifier
+    REQUIRED FIELDS TO EXTRACT:
+    - property_title: The listing headline
+    - property_type: flat, apartment, house, duplex, studio, etc.
+    - price: The rent or sale price with currency
+    - bedrooms: Number of bedrooms
+    - bathrooms: Number of bathrooms
+    - location: Full address or area description
+    - property_description: The full listing description
+    - image_urls: All property image URLs found on the page
+    - agent_name: The listing agent or property owner name
+    - phone_number: Contact phone number
+    - property_url: The original URL you visited
 
-    PROPERTY DETAILS:
-    - Property title/headline
-    - Property type (apartment, house, duplex, condo, studio, etc.)
-    - Full address (street, city, state/region, postal code, country)
-    - Price (sale price or rent amount with currency)
-    - Price frequency for rentals (monthly, weekly, yearly)
-    - Bedrooms count
-    - Bathrooms count
-    - Square footage/meters
-    - Year built
-    - Lot size (if applicable)
-    - Parking spaces/garage info
-    - Furnished status
-    - Pet policy
-    - Available date
-    - Lease terms (for rentals)
-
-    PROPERTY FEATURES:
-    - Amenities list (pool, gym, balcony, garden, etc.)
-    - Utilities included
-    - Security features
-    - Appliances included
-    - Special features (waterfront, mountain view, etc.)
-
-    PROPERTY DESCRIPTION:
-    - Full listing description text
-    - Neighborhood description if available
-
-    CONTACT INFORMATION:
-    - Agent/owner name
-    - Phone number(s)
-    - Email address
-    - Brokerage/agency name
-    - Agent photo URL if available
-
-    LISTING METADATA:
-    - Original listing URL
-    - Platform source (Zillow, Realtor, etc.)
-    - Listing ID on platform
-    - Date listed
-    - Days on market
-    - Listing status (active, pending, etc.)
-
-    Handle missing data gracefully by marking fields as null with extraction notes.
+    INSTRUCTIONS:
+    - Call the TinyFish tool once per property URL
+    - Set the goal to: "Extract property details including title, price, bedrooms, 
+      bathrooms, location, description, all image URLs, agent name, and phone number"
+    - Enable stealth mode (use_stealth=true) for bot-protected sites
+    - If a page fails to load, note it and move to the next property
+    - After extraction, CHECK if each property matches the user's original 
+      criteria: {search_criteria}. Drop any that clearly do not match.
+    - Do NOT invent or guess any data. If a field is missing, set it to null.
   expected_output: >
-    A list of structured PropertyRecord objects containing:
-    - images: array of {url, caption, is_primary}
-    - details: {title, type, address, price, price_frequency, bedrooms, bathrooms, 
-      sqft, year_built, lot_size, parking, furnished, pet_policy, available_date, lease_terms}
-    - features: {amenities[], utilities[], security[], appliances[], special[]}
-    - description: {full_text, neighborhood}
-    - contact: {name, phone, email, brokerage, photo_url}
-    - metadata: {listing_url, platform, listing_id, date_listed, days_on_market, status}
-    - extraction_notes: any gaps or issues encountered
+    A JSON array of extracted properties that match the criteria:
+    [
+      {
+        "property_title": "Spacious 2 Bedroom Flat",
+        "property_type": "flat",
+        "price": "₦1,500,000/year",
+        "bedrooms": 2,
+        "bathrooms": 2,
+        "location": "Lekki Phase 1, Lagos",
+        "property_description": "A well-finished 2 bedroom flat...",
+        "image_urls": ["https://...", "https://..."],
+        "agent_name": "John Properties",
+        "phone_number": "+234-801-234-5678",
+        "property_url": "https://example.com/property/12345",
+        "matches_criteria": true
+      }
+    ]
   agent: tinyfish_extractor
   tool_choice: required
   context:
@@ -160,121 +95,96 @@ extract_property_data:
 
 validate_data:
   description: >
-    Validate all extracted PropertyRecord objects for data quality and assign 
-    quality scores to each property.
+    Validate the extracted property records for data quality.
 
-    VALIDATION CHECKLIST:
-    1. MANDATORY FIELDS (fail if missing):
-       - property_location/address (at minimum city required)
-       - price (any format, but must exist)
-       - At least ONE contact method (phone OR email OR listing URL)
+    FOR EACH PROPERTY CHECK:
+    1. Has a price (any format, must exist)
+    2. Has a location (at minimum an area or city)
+    3. Has at least one contact method (phone number OR agent name)
+    4. Phone number format is valid if present (7+ digits)
+    5. URLs start with http:// or https://
+    6. Has at least one image URL
 
-    2. PHONE NUMBER VALIDATION:
-       - Must be 7+ digits
-       - Can include +, -, (), spaces
-       - Flag but don't reject unusual formats
+    SCORING (0-100):
+    - 100: All fields present and valid
+    - 80-99: Minor gaps (missing optional fields like bathrooms)
+    - 60-79: Some issues (missing 1-2 important fields)
+    - 40-59: Significant gaps (no images or no description)
+    - Below 40: Missing critical fields (no price or no location)
 
-    3. URL VALIDATION:
-       - Must start with http:// or https://
-       - Image URLs should end in common extensions (.jpg, .png, .webp) or be CDN URLs
-
-    4. PRICE REASONABILITY:
-       - Flag prices under $100 (likely missing zeros)
-       - Flag prices over $100M (likely errors)
-       - Note currency if not USD
-
-    5. QUALITY SCORING (0-100):
-       - 100: All fields present, all validations pass
-       - 80-99: Minor issues (missing optional fields)
-       - 60-79: Some issues (1-2 validation warnings)
-       - 40-59: Significant issues (missing important fields)
-       - 0-39: Critical issues (missing mandatory fields)
-
-    IMPORTANT: Do NOT remove properties with issues. Flag them and let the human decide.
+    IMPORTANT: Do NOT remove properties. Flag issues and let the human decide.
   expected_output: >
-    A JSON array of validated PropertyRecord objects, each with added fields:
+    A JSON array of validated properties, each with added fields:
     - quality_score: Integer 0-100
-    - validation_status: "pass" | "warning" | "fail"
-    - validation_notes: Array of specific issues found
-    - is_actionable: Boolean (true if has enough data to contact agent)
+    - validation_issues: Array of specific problems found
+    - is_actionable: true if enough data exists to contact the agent
 
-    Plus a summary object:
+    Plus a summary:
     - total_properties: count
-    - passed: count with score >= 80
-    - warnings: count with score 40-79
-    - failed: count with score < 40
-    - common_issues: array of most frequent problems
+    - average_quality: average score
+    - properties_with_issues: count
   agent: validator
   context:
     - extract_property_data
 
 compile_research_report:
   description: >
-    Compile all validated property records into a final JSON report optimized 
-    for the frontend Human Decision Gate interface.
+    Compile all validated properties into a final JSON report for the user.
 
     REPORT STRUCTURE:
-    1. METADATA section:
-       - search_criteria: Original search parameters
-       - generated_at: ISO timestamp
-       - total_found: Number of properties scraped
-       - total_validated: Number passing validation
-       - quality_summary: Breakdown by quality tier
+    1. METADATA:
+       - search_criteria: What the user searched for
+       - generated_at: Current timestamp
+       - total_properties: How many properties found
+       - average_quality: Average quality score
 
-    2. PROPERTIES array (sorted by quality_score descending):
-       Each property should have:
-       - id: Unique identifier for frontend reference
-       - display_title: Clean title for UI card
-       - price_display: Formatted price with currency (e.g., "$2,500/month")
-       - location_display: Clean address for UI
-       - primary_image: Single URL for card thumbnail
+    2. PROPERTIES array (sorted by quality_score, highest first):
+       Each property must include:
+       - id: "prop_001", "prop_002", etc.
+       - property_title: Clean display title
+       - price: Formatted with currency
+       - location: Clean address
+       - bedrooms and bathrooms
+       - property_type
+       - primary_image: First image URL
        - all_images: Array of all image URLs
-       - specs: {bedrooms, bathrooms, sqft, type}
-       - contact: {name, phone, email, company}
-       - listing_url: Link to original listing
+       - agent_name: Contact person
+       - phone_number: Contact phone
+       - property_url: Link to original listing
        - quality_score: From validation
-       - quality_notes: Human-readable issues summary
+       - issues: Any flagged problems
 
-    3. ISSUES section:
-       - properties_with_no_contact: List of property IDs
-       - properties_with_no_images: List of property IDs
-       - properties_flagged: List with reasons
-
-    FORMAT REQUIREMENTS:
-    - All prices formatted with currency symbol
-    - All dates in ISO format
-    - Empty arrays [] instead of null for missing lists
-    - Consistent field names (snake_case)
+    FORMAT RULES:
+    - Use snake_case for all field names
+    - Use empty arrays [] instead of null for missing lists
+    - Include currency symbols in prices
   expected_output: >
-    A single JSON object ready for frontend consumption:
+    A single JSON object:
     {
       "metadata": {
-        "search_criteria": "...",
-        "generated_at": "2024-01-15T10:30:00Z",
-        "total_found": 25,
-        "total_validated": 22,
-        "quality_summary": {"excellent": 10, "good": 8, "fair": 4}
+        "search_criteria": "2 bedroom flats in Lagos",
+        "generated_at": "2026-02-24T12:00:00Z",
+        "total_properties": 5,
+        "average_quality": 82
       },
       "properties": [
         {
           "id": "prop_001",
-          "display_title": "Modern 2BR Apartment in Downtown",
-          "price_display": "$2,500/month",
-          "location_display": "123 Main St, Austin, TX",
+          "property_title": "Spacious 2 Bed Flat in Lekki",
+          "price": "₦1,500,000/year",
+          "location": "Lekki Phase 1, Lagos",
+          "bedrooms": 2,
+          "bathrooms": 2,
+          "property_type": "flat",
           "primary_image": "https://...",
           "all_images": ["https://..."],
-          "specs": {"bedrooms": 2, "bathrooms": 1, "sqft": 950, "type": "apartment"},
-          "contact": {"name": "John Agent", "phone": "+1-555-0123", "email": "...", "company": "Realty Co"},
-          "listing_url": "https://zillow.com/...",
+          "agent_name": "John Properties",
+          "phone_number": "+234-801-234-5678",
+          "property_url": "https://example.com/...",
           "quality_score": 95,
-          "quality_notes": "Complete listing"
+          "issues": []
         }
-      ],
-      "issues": {
-        "properties_with_no_contact": [],
-        "properties_with_no_images": ["prop_015"],
-        "properties_flagged": []
-      }
+      ]
     }
   agent: report_agent
   context:
